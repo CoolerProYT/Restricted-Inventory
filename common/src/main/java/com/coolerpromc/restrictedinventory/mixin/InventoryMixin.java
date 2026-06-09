@@ -1,0 +1,75 @@
+package com.coolerpromc.restrictedinventory.mixin;
+
+import com.coolerpromc.restrictedinventory.config.CommonConfig;
+import com.coolerpromc.restrictedinventory.mixin.accessor.InventoryAccessor;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import java.util.Map;
+
+@Mixin(Inventory.class)
+public abstract class InventoryMixin {
+    @Inject(method = "addResource(Lnet/minecraft/world/item/ItemStack;)I", at = @At("HEAD"), cancellable = true)
+    private void onAddResource(ItemStack itemStack, CallbackInfoReturnable<Integer> cir) {
+        Inventory self = (Inventory)(Object)this;
+        Map<Integer, String> restricted = CommonConfig.restrictedSlots(self.player);
+
+        int slot = restrictedInventory$findValidSlot(self, itemStack, restricted);
+
+        if (slot == -1) {
+            cir.setReturnValue(itemStack.getCount());
+        } else {
+            cir.setReturnValue(((InventoryAccessor) self).callAddResource(slot, itemStack));
+        }
+    }
+
+    @Unique
+    private int restrictedInventory$findValidSlot(Inventory inv, ItemStack incoming, Map<Integer, String> restricted) {
+        for (int i = 0; i < 36; i++) {
+            if (!restrictedInventory$isSlotAllowed(i, incoming, restricted)) continue;
+            ItemStack existing = inv.getItem(i);
+            if (!existing.isEmpty()
+                    && ItemStack.isSameItemSameComponents(existing, incoming)
+                    && existing.getCount() < inv.getMaxStackSize(existing)) {
+                return i;
+            }
+        }
+
+        for (Map.Entry<Integer, String> entry : restricted.entrySet()) {
+            int slot = entry.getKey();
+            if (!inv.getItem(slot).isEmpty()) continue;
+            if (restrictedInventory$isSlotAllowed(slot, incoming, restricted)) return slot;
+        }
+
+        for (int i = 0; i < 36; i++) {
+            if (restricted.containsKey(i)) continue;
+            if (inv.getItem(i).isEmpty()) return i;
+        }
+
+        return -1;
+    }
+
+    @Unique
+    private boolean restrictedInventory$isSlotAllowed(int slot, ItemStack incoming, Map<Integer, String> restricted) {
+        if (!restricted.containsKey(slot)) return true;
+
+        String value = restricted.get(slot);
+        if (value.startsWith("#")) {
+            TagKey<Item> tag = TagKey.create(Registries.ITEM, Identifier.parse(value.substring(1)));
+            return incoming.is(tag);
+        } else {
+            Item required = BuiltInRegistries.ITEM.getValue(Identifier.parse(value));
+            return incoming.is(required);
+        }
+    }
+}

@@ -1,0 +1,20 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.coolerpromc.restrictedinventory.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "InventoryMixin",
+    "SlotMixin",
+    "accessor.InventoryAccessor"
+  ],
+  "server": [],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "client": [
+    "InventoryScreenMixin",
+    "accessor.AbstractContainerScreenAccessor"
+  ]
+}
+

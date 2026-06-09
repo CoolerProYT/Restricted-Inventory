@@ -1,0 +1,80 @@
+plugins {
+    id 'multiloader-loader'
+    id 'net.fabricmc.fabric-loom'
+    id "me.modmuss50.mod-publish-plugin"
+}
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    implementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
+    implementation include("com.coolerpromc.coolerconfig:coolerconfig-fabric-${minecraft_version}:${cooler_config_version}")
+}
+
+loom {
+    def aw = project(':common').file("src/main/resources/${mod_id}.accesswidener")
+    if (aw.exists()) {
+        accessWidenerPath.set(aw)
+    }
+    runs {
+        client {
+            client()
+            setConfigName('Fabric Client')
+            ideConfigGenerated(true)
+            runDir('runs/client')
+        }
+        client2 {
+            client()
+            setConfigName('Fabric Client 2')
+            ideConfigGenerated(true)
+            runDir('runs/client2')
+        }
+        server {
+            server()
+            setConfigName('Fabric Server')
+            ideConfigGenerated(true)
+            runDir('runs/server')
+        }
+    }
+}
+
+// Implement mcgradleconventions loader attribute
+def loaderAttribute = Attribute.of('io.github.mcgradleconventions.loader', String)
+['apiElements', 'runtimeElements', 'sourcesElements', 'javadocElements', 'includeInternal', 'modCompileClasspath'].each { variant ->
+    configurations.named("$variant") {
+        attributes {
+            attribute(loaderAttribute, 'fabric')
+        }
+    }
+}
+sourceSets.configureEach {
+    [it.compileClasspathConfigurationName, it.runtimeClasspathConfigurationName].each { variant->
+        configurations.named("$variant") {
+            attributes {
+                attribute(loaderAttribute, 'fabric')
+            }
+        }
+    }
+}
+
+publishMods {
+    file.set(jar.archiveFile)
+    type = BETA
+    modLoaders.add("fabric")
+    changelog = rootProject.file("changelog.md").text
+    displayName = mod_id + "-" + project.version + "+" + minecraft_version + "-fabric"
+
+    curseforge {
+        projectId = "1569997"
+        accessToken = findProperty("CF_TOKEN")
+        minecraftVersions.add(minecraft_version)
+
+        client = true
+        server = true
+    }
+
+    modrinth {
+        projectId = 'ThJBmy1K'
+        accessToken = findProperty("MODRINTH_TOKEN")
+        minecraftVersions.add(minecraft_version)
+    }
+}
