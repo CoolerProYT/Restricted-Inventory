@@ -1,6 +1,7 @@
 package com.coolerpromc.restrictedinventory;
 
 import com.coolerpromc.restrictedinventory.config.ClientConfig;
+import com.coolerpromc.restrictedinventory.network.ClientBoundAttachmentSyncPacket;
 import com.coolerpromc.restrictedinventory.network.ClientBoundNotifyUpdatePacket;
 import com.coolerpromc.restrictedinventory.network.ServerBoundClientRestrictedSlotsPacket;
 import com.coolerpromc.restrictedinventory.platform.Services;
@@ -14,7 +15,8 @@ public class FabricRestrictedInventoryClient implements ClientModInitializer {
     public void onInitializeClient() {
         RestrictedInventoryClient.init();
 
-        ClientPlayNetworking.registerGlobalReceiver(ClientBoundNotifyUpdatePacket.TYPE, (payload, context) -> payload.handle(new FabricClientPayloadContext(context)));
+        ClientPlayNetworking.registerGlobalReceiver(ClientBoundNotifyUpdatePacket.TYPE, (client, handler, buf, sender) -> ClientBoundNotifyUpdatePacket.decode(buf).handle(new FabricClientPayloadContext(client, handler)));
+        ClientPlayNetworking.registerGlobalReceiver(ClientBoundAttachmentSyncPacket.TYPE, (client, handler, buf, sender) -> ClientBoundAttachmentSyncPacket.decode(buf).handle(new FabricClientPayloadContext(client, handler)));
 
         ClientPlayConnectionEvents.JOIN.register((listener, sender, client) -> {
             Services.NETWORK.sendToServer(new ServerBoundClientRestrictedSlotsPacket(ClientConfig.getRestrictedSlots()));

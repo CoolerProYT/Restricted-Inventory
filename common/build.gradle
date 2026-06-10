@@ -1,14 +1,12 @@
 plugins {
     id 'multiloader-common'
-    id 'net.neoforged.moddev'
+    id 'net.neoforged.moddev.legacyforge'
 }
 
-neoForge {
-    neoFormVersion = neo_form_version
-    // Automatically enable AccessTransformers if the file exists
-    def at = file('src/main/resources/META-INF/accesstransformer.cfg')
-    if (at.exists()) {
-        accessTransformers.from(at.absolutePath)
+legacyForge  {
+    mcpVersion = minecraft_version
+    if (file("src/main/resources/META-INF/accesstransformer.cfg").exists()) {
+        accessTransformers = ["src/main/resources/META-INF/accesstransformer.cfg"]
     }
     parchment {
         minecraftVersion = parchment_minecraft
@@ -18,9 +16,7 @@ neoForge {
 
 dependencies {
     compileOnly "org.spongepowered:mixin:0.8.5"
-    // fabric and neoforge both bundle mixinextras, so it is safe to use it in common
-    compileOnly "io.github.llamalad7:mixinextras-common:0.5.3"
-    annotationProcessor "io.github.llamalad7:mixinextras-common:0.5.3"
+    implementation "com.google.code.findbugs:jsr305:3.0.1"
 
     compileOnly "com.coolerpromc.coolerconfig:coolerconfig-common-${minecraft_version}:${cooler_config_version}"
 }
@@ -39,23 +35,4 @@ configurations {
 artifacts {
     commonJava sourceSets.main.java.sourceDirectories.singleFile
     commonResources sourceSets.main.resources.sourceDirectories.singleFile
-}
-
-// Implement mcgradleconventions loader attribute
-def loaderAttribute = Attribute.of('io.github.mcgradleconventions.loader', String)
-['apiElements', 'runtimeElements', 'sourcesElements', 'javadocElements'].each { variant ->
-    configurations.named("$variant") {
-        attributes {
-            attribute(loaderAttribute, 'common')
-        }
-    }
-}
-sourceSets.configureEach {
-    [it.compileClasspathConfigurationName, it.runtimeClasspathConfigurationName].each { variant->
-        configurations.named("$variant") {
-            attributes {
-                attribute(loaderAttribute, 'common')
-            }
-        }
-    }
 }

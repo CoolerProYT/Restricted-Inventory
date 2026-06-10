@@ -50,6 +50,19 @@ repositories {
     }
 }
 
+['apiElements', 'runtimeElements', 'sourcesElements', 'javadocElements'].each { variant ->
+    configurations."$variant".outgoing {
+        capability("$group:${project.name}:$version")
+        capability("$group:${base.archivesName.get()}:$version")
+        capability("$group:$mod_id-${project.name}-${minecraft_version}:$version")
+        capability("$group:$mod_id:$version")
+    }
+    publishing.publications.configureEach {
+        suppressPomMetadataWarningsFor(variant)
+    }
+}
+
+
 sourcesJar {
     from(rootProject.file('LICENSE')) {
         rename { "${it}_${mod_name}" }
@@ -87,9 +100,8 @@ processResources {
             'mod_id'                       : mod_id,
             'license'                      : license,
             'description'                  : project.description,
-            'neoforge_version'             : neoforge_version,
-            'neoforge_version_range'       : neoforge_version_range,
-            'neoforge_loader_version_range': neoforge_loader_version_range,
+            "forge_version"                : forge_version,
+            "forge_loader_version_range"   : forge_loader_version_range,
             'credits'                      : credits,
             'java_version'                 : java_version,
             'cooler_config_version'        : cooler_config_version
@@ -99,7 +111,7 @@ processResources {
         key, value -> [(key): value instanceof String ? value.replace("\n", "\\\\n") : value]
     }
 
-    filesMatching(['META-INF/mods.toml', 'META-INF/neoforge.mods.toml']) {
+    filesMatching(['META-INF/mods.toml']) {
         expand expandProps
     }
 

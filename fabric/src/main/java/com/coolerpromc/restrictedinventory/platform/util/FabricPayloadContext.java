@@ -1,28 +1,29 @@
 package com.coolerpromc.restrictedinventory.platform.util;
 
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 
-public record FabricPayloadContext(ServerPlayNetworking.Context context) implements PayloadContext{
+public record FabricPayloadContext(MinecraftServer server, Player player, ServerGamePacketListenerImpl listener) implements PayloadContext{
     @Override
     public Player player() {
-        return context.player();
+        return player;
     }
 
     @Override
     public Level level() {
-        return context.player().level();
+        return player.level();
     }
 
     @Override
     public void execute(Runnable runnable) {
-        context.server().execute(runnable);
+        server.execute(runnable);
     }
 
     @Override
     public void disconnect(Component reason) {
-        context.responseSender().disconnect(reason);
+        listener.disconnect(reason);
     }
 }

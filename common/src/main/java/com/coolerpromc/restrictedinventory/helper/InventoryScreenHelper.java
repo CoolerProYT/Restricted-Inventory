@@ -15,11 +15,10 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ArmorSlot;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
-import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.Nullable;
 import java.util.Map;
 
 public class InventoryScreenHelper {
@@ -48,7 +47,7 @@ public class InventoryScreenHelper {
 
                 String value = CommonConfig.restrictedSlots(player).get(slot.getContainerSlot());
                 if (value.startsWith("#")){
-                    TagKey<Item> tag = TagKey.create(Registries.ITEM, ResourceLocation.parse(value.substring(1)));
+                    TagKey<Item> tag = TagKey.create(Registries.ITEM, new ResourceLocation(value.substring(1)));
                     HolderSet<Item> items = BuiltInRegistries.ITEM.getOrCreateTag(tag);
 
                     int size = items.size();
@@ -59,7 +58,7 @@ public class InventoryScreenHelper {
                     }
                 }
                 else {
-                    Item item = BuiltInRegistries.ITEM.get(ResourceLocation.parse(value));
+                    Item item = BuiltInRegistries.ITEM.get(new ResourceLocation(value));
                     graphics.renderFakeItem(item.getDefaultInstance(), x, y);
                 }
                 graphics.pose().pushPose();
@@ -71,7 +70,7 @@ public class InventoryScreenHelper {
     }
 
     private static boolean isModifiableSlot(Slot slot) {
-        return slot.container instanceof Inventory && !(slot instanceof ArmorSlot) && slot.getContainerSlot() >= 0 && slot.getContainerSlot() <= 35;
+        return slot.container instanceof Inventory && slot.getContainerSlot() >= 0 && slot.getContainerSlot() <= 35;
     }
 
     private static @Nullable Slot getSlotByInventoryIndex(NonNullList<Slot> slots, int index){

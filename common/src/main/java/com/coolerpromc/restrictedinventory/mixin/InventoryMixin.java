@@ -39,8 +39,8 @@ public abstract class InventoryMixin {
             if (!restrictedInventory$isSlotAllowed(i, incoming, restricted)) continue;
             ItemStack existing = inv.getItem(i);
             if (!existing.isEmpty()
-                    && ItemStack.isSameItemSameComponents(existing, incoming)
-                    && existing.getCount() < inv.getMaxStackSize(existing)) {
+                    && ItemStack.isSameItemSameTags(existing, incoming)
+                    && existing.getCount() < inv.getMaxStackSize()) {
                 return i;
             }
         }
@@ -65,10 +65,10 @@ public abstract class InventoryMixin {
 
         String value = restricted.get(slot);
         if (value.startsWith("#")) {
-            TagKey<Item> tag = TagKey.create(Registries.ITEM, ResourceLocation.parse(value.substring(1)));
+            TagKey<Item> tag = TagKey.create(Registries.ITEM, new ResourceLocation(value.substring(1)));
             return incoming.is(tag);
         } else {
-            Item required = BuiltInRegistries.ITEM.get(ResourceLocation.parse(value));
+            Item required = BuiltInRegistries.ITEM.get(new ResourceLocation(value));
             return incoming.is(required);
         }
     }

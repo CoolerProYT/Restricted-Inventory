@@ -1,11 +1,21 @@
 plugins {
     id 'multiloader-loader'
-    id 'net.neoforged.moddev'
+    id 'net.neoforged.moddev.legacyforge'
     id "me.modmuss50.mod-publish-plugin"
 }
 
-neoForge {
-    version = neoforge_version
+mixin {
+    add(sourceSets.main, "${mod_id}.refmap.json")
+
+    config("${mod_id}.mixins.json")
+    config("${mod_id}.forge.mixins.json")
+}
+
+legacyForge   {
+    version = "${minecraft_version}-${forge_version}"
+
+    validateAccessTransformers = true
+
     // Automatically enable neoforge AccessTransformers if the file exists
     def at = project(':common').file('src/main/resources/META-INF/accesstransformer.cfg')
     if (at.exists()) {
@@ -18,7 +28,7 @@ neoForge {
     runs {
         configureEach {
             systemProperty('neoforge.enabledGameTestNamespaces', mod_id)
-            ideName = "NeoForge ${it.name.capitalize()} (${project.path})" // Unify the run config names with fabric
+            ideName = "Forge ${it.name.capitalize()} (${project.path})" // Unify the run config names with fabric
         }
         client {
             client()
@@ -26,7 +36,8 @@ neoForge {
         }
         client2{
             client()
-            programArguments = ['--username', 'Dev2']
+            programArguments.add('--username')
+            programArguments.add('Dev2')
             gameDirectory = this.mkdir(this.file("runs/client2"))
         }
         data {
@@ -38,7 +49,6 @@ neoForge {
         }
         server {
             server()
-            this.file("runs/server").createParentDirectories()
             gameDirectory = this.mkdir(this.file("runs/server"))
         }
     }
@@ -50,36 +60,29 @@ neoForge {
 }
 
 dependencies {
-    jarJar implementation("com.coolerpromc.coolerconfig:coolerconfig-neoforge-${minecraft_version}:${cooler_config_version}")
+    compileOnly project(":common")
+    annotationProcessor("org.spongepowered:mixin:0.8.5-SNAPSHOT:processor")
+
+    jarJar implementation("com.coolerpromc.coolerconfig:coolerconfig-forge-${minecraft_version}:${cooler_config_version}")
 }
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
-// Implement mcgradleconventions loader attribute
-def loaderAttribute = Attribute.of('io.github.mcgradleconventions.loader', String)
-['apiElements', 'runtimeElements', 'sourcesElements', 'javadocElements'].each { variant ->
-    configurations.named("$variant") {
-        attributes {
-            attribute(loaderAttribute, 'neoforge')
-        }
-    }
+jar {
+    finalizedBy('reobfJar')
+    manifest.attributes([
+            "MixinConfigs": "${mod_id}.mixins.json,${mod_id}.forge.mixins.json"
+    ])
 }
-sourceSets.configureEach {
-    [it.compileClasspathConfigurationName, it.runtimeClasspathConfigurationName, it.getTaskName(null, 'jarJar')].each { variant ->
-        configurations.named("$variant") {
-            attributes {
-                attribute(loaderAttribute, 'neoforge')
-            }
-        }
-    }
-}
+
+tasks.publishMods.dependsOn(tasks.reobfJar)
 
 publishMods {
     file.set(jar.archiveFile)
     type = BETA
-    modLoaders.add("neoforge")
+    modLoaders.add("forge")
     changelog = rootProject.file("changelog.md").text
-    displayName = mod_id + "-" + project.version + "+" + minecraft_version + "-neoforge"
+    displayName = mod_id + "-" + project.version + "+" + minecraft_version + "-forge"
 
     curseforge {
         projectId = "1569997"

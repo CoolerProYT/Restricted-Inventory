@@ -1,21 +1,22 @@
 package com.coolerpromc.restrictedinventory.platform;
 
-import com.coolerpromc.restrictedinventory.NeoForgeRestrictedInventory;
+import com.coolerpromc.restrictedinventory.capability.IRestrictedSlots;
+import com.coolerpromc.restrictedinventory.capability.ModCapabilities;
 import com.coolerpromc.restrictedinventory.network.ClientBoundAttachmentSyncPacket;
 import com.coolerpromc.restrictedinventory.platform.services.IPlatformHelper;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
-import net.neoforged.fml.ModList;
-import net.neoforged.fml.loading.FMLEnvironment;
-import net.neoforged.fml.loading.FMLLoader;
-import net.neoforged.neoforge.server.ServerLifecycleHooks;
+import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.loading.FMLEnvironment;
+import net.minecraftforge.fml.loading.FMLLoader;
+import net.minecraftforge.server.ServerLifecycleHooks;
 
 import java.util.Map;
 
-public class NeoForgePlatformHelper implements IPlatformHelper {
+public class ForgePlatformHelper implements IPlatformHelper {
     @Override
     public String getPlatformName() {
-        return "NeoForge";
+        return "Forge";
     }
 
     @Override
@@ -35,13 +36,14 @@ public class NeoForgePlatformHelper implements IPlatformHelper {
 
     @Override
     public Map<Integer, String> getRestrictedSlots(Player player) {
-        return player.getData(NeoForgeRestrictedInventory.RESTRICTED_SLOTS_ATTACHMENT);
+        return player.getCapability(ModCapabilities.RESTRICTED_SLOTS).map(IRestrictedSlots::getRestrictedSlots).orElse(Map.of());
     }
 
     @Override
     public void setRestrictedSlots(Player player, Map<Integer, String> restrictedSlots) {
-        player.setData(NeoForgeRestrictedInventory.RESTRICTED_SLOTS_ATTACHMENT, restrictedSlots);
-        if (player instanceof ServerPlayer serverPlayer){
+        player.getCapability(ModCapabilities.RESTRICTED_SLOTS).ifPresent(cap -> cap.setRestrictedSlots(restrictedSlots));
+
+        if (player instanceof ServerPlayer serverPlayer) {
             Services.NETWORK.sendToPlayer(serverPlayer, new ClientBoundAttachmentSyncPacket(restrictedSlots));
         }
     }

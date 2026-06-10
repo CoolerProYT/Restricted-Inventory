@@ -1,11 +1,13 @@
 package com.coolerpromc.restrictedinventory.platform;
 
 import com.coolerpromc.restrictedinventory.FabricRestrictedInventory;
+import com.coolerpromc.restrictedinventory.network.ClientBoundAttachmentSyncPacket;
 import com.coolerpromc.restrictedinventory.platform.services.IPlatformHelper;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 
 import java.util.Map;
@@ -39,6 +41,9 @@ public class FabricPlatformHelper implements IPlatformHelper {
     @Override
     public void setRestrictedSlots(Player player, Map<Integer, String> restrictedSlots) {
         player.setAttached(FabricRestrictedInventory.RESTRICTED_SLOTS_ATTACHMENT, restrictedSlots);
+        if (player instanceof ServerPlayer serverPlayer){
+            Services.NETWORK.sendToPlayer(serverPlayer, new ClientBoundAttachmentSyncPacket(restrictedSlots));
+        }
     }
 
     @Override
