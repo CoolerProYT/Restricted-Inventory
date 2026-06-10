@@ -14,7 +14,8 @@
   },
   "client": [
     "InventoryScreenMixin",
-    "accessor.AbstractContainerScreenAccessor"
+    "accessor.AbstractContainerScreenAccessor",
+    "accessor.ScreenAccessor"
   ]
 }
 

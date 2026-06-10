@@ -2,38 +2,40 @@ package com.coolerpromc.restrictedinventory.helper;
 
 import com.coolerpromc.restrictedinventory.config.CommonConfig;
 import com.coolerpromc.restrictedinventory.mixin.accessor.AbstractContainerScreenAccessor;
+import com.coolerpromc.restrictedinventory.mixin.accessor.ScreenAccessor;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.core.HolderSet;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.ArmorSlot;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ArmorSlot;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 
 public class InventoryScreenHelper {
-    public static <T extends AbstractContainerMenu> void extractSlotIndex(GuiGraphicsExtractor graphics, AbstractContainerScreen<T> screen){
+    public static <T extends AbstractContainerMenu> void extractSlotIndex(GuiGraphics graphics, AbstractContainerScreen<T> screen){
         AbstractContainerScreenAccessor accessor = (AbstractContainerScreenAccessor) screen;
+        ScreenAccessor screenAccessor = (ScreenAccessor) screen;
         for (Slot slot : screen.getMenu().slots){
             if (isModifiableSlot(slot)){
                 int x = slot.x + accessor.restrictedinventory$getLeftPos() + 8;
-                int y = slot.y + accessor.restrictedinventory$getTopPos() + (screen.getFont().lineHeight / 2);
-                graphics.centeredText(screen.getFont(), String.valueOf(slot.getContainerSlot()), x, y, -1);
+                int y = slot.y + accessor.restrictedinventory$getTopPos() + (screenAccessor.getFont().lineHeight / 2);
+                graphics.drawCenteredString(screenAccessor.getFont(), String.valueOf(slot.getContainerSlot()), x, y, -1);
             }
         }
     }
 
-    public static <T extends AbstractContainerMenu> void extractRestrictedSlot(GuiGraphicsExtractor graphics, AbstractContainerScreen<T> screen) {
+    public static <T extends AbstractContainerMenu> void extractRestrictedSlot(GuiGraphics graphics, AbstractContainerScreen<T> screen) {
         AbstractContainerScreenAccessor accessor = (AbstractContainerScreenAccessor) screen;
         Player player = Minecraft.getInstance().player;
         for (Map.Entry<Integer, String> restrictedSlot : CommonConfig.restrictedSlots(player).entrySet()){
@@ -42,23 +44,28 @@ public class InventoryScreenHelper {
                 int x = slot.x + accessor.restrictedinventory$getLeftPos();
                 int y = slot.y + accessor.restrictedinventory$getTopPos();
 
+                graphics.fill(x, y, x + 16, y + 16, 0xFF8B8B8B);
+
                 String value = CommonConfig.restrictedSlots(player).get(slot.getContainerSlot());
                 if (value.startsWith("#")){
-                    TagKey<Item> tag = TagKey.create(Registries.ITEM, Identifier.parse(value.substring(1)));
-                    HolderSet<Item> items = BuiltInRegistries.ITEM.getOrThrow(tag);
+                    TagKey<Item> tag = TagKey.create(Registries.ITEM, ResourceLocation.parse(value.substring(1)));
+                    HolderSet<Item> items = BuiltInRegistries.ITEM.getOrCreateTag(tag);
 
                     int size = items.size();
                     if (size > 0) {
                         int index = (int) ((System.currentTimeMillis() / 1000) % size);
                         Item tagItem = items.get(index).value();
-                        graphics.fakeItem(tagItem.getDefaultInstance(), x, y);
+                        graphics.renderFakeItem(tagItem.getDefaultInstance(), x, y);
                     }
                 }
                 else {
-                    Item item = BuiltInRegistries.ITEM.getValue(Identifier.parse(value));
-                    graphics.fakeItem(item.getDefaultInstance(), x, y);
+                    Item item = BuiltInRegistries.ITEM.get(ResourceLocation.parse(value));
+                    graphics.renderFakeItem(item.getDefaultInstance(), x, y);
                 }
+                graphics.pose().pushPose();
+                graphics.pose().translate(0, 0, 200);
                 graphics.fill(x, y, x + 16, y + 16, 0xCC8B8B8B);
+                graphics.pose().popPose();
             }
         }
     }

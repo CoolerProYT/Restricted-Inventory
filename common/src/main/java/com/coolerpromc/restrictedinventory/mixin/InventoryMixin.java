@@ -4,7 +4,7 @@ import com.coolerpromc.restrictedinventory.config.CommonConfig;
 import com.coolerpromc.restrictedinventory.mixin.accessor.InventoryAccessor;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.Item;
@@ -65,10 +65,10 @@ public abstract class InventoryMixin {
 
         String value = restricted.get(slot);
         if (value.startsWith("#")) {
-            TagKey<Item> tag = TagKey.create(Registries.ITEM, Identifier.parse(value.substring(1)));
+            TagKey<Item> tag = TagKey.create(Registries.ITEM, ResourceLocation.parse(value.substring(1)));
             return incoming.is(tag);
         } else {
-            Item required = BuiltInRegistries.ITEM.getValue(Identifier.parse(value));
+            Item required = BuiltInRegistries.ITEM.get(ResourceLocation.parse(value));
             return incoming.is(required);
         }
     }

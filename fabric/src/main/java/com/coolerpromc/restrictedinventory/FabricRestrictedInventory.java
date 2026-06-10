@@ -28,8 +28,8 @@ public class FabricRestrictedInventory implements ModInitializer {
         ServerLifecycleEvents.SERVER_STARTING.register(server -> MINECRAFT_SERVER = server);
         ServerLifecycleEvents.SYNC_DATA_PACK_CONTENTS.register((p, b) -> RestrictedInventory.syncCommonRestrictedInventory(p));
 
-        PayloadTypeRegistry.serverboundPlay().register(ServerBoundClientRestrictedSlotsPacket.TYPE, ServerBoundClientRestrictedSlotsPacket.STREAM_CODEC);
-        PayloadTypeRegistry.clientboundPlay().register(ClientBoundNotifyUpdatePacket.TYPE, ClientBoundNotifyUpdatePacket.STREAM_CODEC);
+        PayloadTypeRegistry.playC2S().register(ServerBoundClientRestrictedSlotsPacket.TYPE, ServerBoundClientRestrictedSlotsPacket.STREAM_CODEC);
+        PayloadTypeRegistry.playS2C().register(ClientBoundNotifyUpdatePacket.TYPE, ClientBoundNotifyUpdatePacket.STREAM_CODEC);
 
         ServerPlayNetworking.registerGlobalReceiver(ServerBoundClientRestrictedSlotsPacket.TYPE, (payload, context) -> payload.handle(new FabricPayloadContext(context)));
     }

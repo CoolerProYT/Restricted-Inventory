@@ -32,7 +32,7 @@ public class CommonConfig {
             else{
                 try{
                     Services.NETWORK.sendToAllPlayer(new ClientBoundNotifyUpdatePacket());
-                } catch (Exception _){}
+                } catch (Exception ignored){}
             }
         });
     }
