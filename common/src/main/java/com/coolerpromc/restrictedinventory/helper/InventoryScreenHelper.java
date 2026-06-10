@@ -3,6 +3,7 @@ package com.coolerpromc.restrictedinventory.helper;
 import com.coolerpromc.restrictedinventory.config.CommonConfig;
 import com.coolerpromc.restrictedinventory.mixin.accessor.AbstractContainerScreenAccessor;
 import com.coolerpromc.restrictedinventory.mixin.accessor.ScreenAccessor;
+import com.coolerpromc.restrictedinventory.platform.Services;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -26,7 +27,7 @@ public class InventoryScreenHelper {
     public static <T extends AbstractContainerMenu> void extractSlotIndex(GuiGraphics graphics, AbstractContainerScreen<T> screen){
         AbstractContainerScreenAccessor accessor = (AbstractContainerScreenAccessor) screen;
         ScreenAccessor screenAccessor = (ScreenAccessor) screen;
-        for (Slot slot : screen.getMenu().slots){
+            for (Slot slot : screen.getMenu().slots){
             if (isModifiableSlot(slot)){
                 int x = slot.x + accessor.restrictedinventory$getLeftPos() + 8;
                 int y = slot.y + accessor.restrictedinventory$getTopPos() + (screenAccessor.getFont().lineHeight / 2);
@@ -71,7 +72,7 @@ public class InventoryScreenHelper {
     }
 
     private static boolean isModifiableSlot(Slot slot) {
-        return slot.container instanceof Inventory && !(slot instanceof ArmorSlot) && slot.getContainerSlot() >= 0 && slot.getContainerSlot() <= 35;
+        return (slot.container instanceof Inventory && !(slot instanceof ArmorSlot) && slot.getContainerSlot() >= 0 && slot.getContainerSlot() <= 35) || Services.SLOT.isModifiableSlot(slot);
     }
 
     private static @Nullable Slot getSlotByInventoryIndex(NonNullList<Slot> slots, int index){
