@@ -61,6 +61,8 @@ legacyForge   {
 
 dependencies {
     compileOnly project(":common")
+    compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.5.4"))
+    implementation(jarJar("io.github.llamalad7:mixinextras-forge:0.5.4"))
     annotationProcessor("org.spongepowered:mixin:0.8.5-SNAPSHOT:processor")
 
     jarJar implementation("com.coolerpromc.coolerconfig:coolerconfig-forge-${minecraft_version}:${cooler_config_version}")

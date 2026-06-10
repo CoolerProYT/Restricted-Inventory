@@ -3,6 +3,7 @@ package com.coolerpromc.restrictedinventory.helper;
 import com.coolerpromc.restrictedinventory.config.CommonConfig;
 import com.coolerpromc.restrictedinventory.mixin.accessor.AbstractContainerScreenAccessor;
 import com.coolerpromc.restrictedinventory.mixin.accessor.ScreenAccessor;
+import com.coolerpromc.restrictedinventory.platform.Services;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -70,7 +71,7 @@ public class InventoryScreenHelper {
     }
 
     private static boolean isModifiableSlot(Slot slot) {
-        return slot.container instanceof Inventory && slot.getContainerSlot() >= 0 && slot.getContainerSlot() <= 35;
+        return (slot.container instanceof Inventory && slot.getContainerSlot() >= 0 && slot.getContainerSlot() <= 35) || Services.SLOT.isModifiableSlot(slot);
     }
 
     private static @Nullable Slot getSlotByInventoryIndex(NonNullList<Slot> slots, int index){
