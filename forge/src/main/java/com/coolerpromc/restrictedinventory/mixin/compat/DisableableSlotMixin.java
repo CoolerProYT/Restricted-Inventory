@@ -17,10 +17,18 @@ public abstract class DisableableSlotMixin extends Slot {
         super(container, slot, x, y);
     }
 
-    @ModifyReturnValue(method = "mayPlace", at = @At("RETURN"), require = 0)
-    public boolean mayPlace(boolean original, @Local(argsOnly = true) ItemStack stack){
-        Constants.LOGGER.info(String.valueOf(original));
-        if (original){
+    @ModifyReturnValue(
+            method = {
+                    "mayPlace(Lnet/minecraft/world/item/ItemStack;)Z",
+                    "m_5857_(Lnet/minecraft/world/item/ItemStack;)Z"
+            },
+            at = @At("RETURN"),
+            require = 0,
+            expect = 0,
+            remap = false
+    )
+    public boolean mayPlace(boolean original, @Local(argsOnly = true) ItemStack stack) {
+        if (original) {
             return super.mayPlace(stack);
         }
         return false;
