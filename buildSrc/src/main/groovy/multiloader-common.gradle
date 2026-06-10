@@ -79,7 +79,9 @@ processResources {
             'neoforge_loader_version_range': neoforge_loader_version_range,
             'credits'                      : credits,
             'java_version'                 : java_version,
-            'cooler_config_version'        : cooler_config_version
+            'cooler_config_version'        : cooler_config_version,
+            'fabric_mc_version_range'      : fabric_mc_version_range,
+            'dependencies_minecraft_version': dependencies_minecraft_version
     ]
 
     var jsonExpandProps = expandProps.collectEntries {

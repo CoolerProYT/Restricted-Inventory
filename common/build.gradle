@@ -18,7 +18,7 @@ dependencies {
     compileOnly "io.github.llamalad7:mixinextras-common:0.5.3"
     annotationProcessor "io.github.llamalad7:mixinextras-common:0.5.3"
 
-    compileOnly "com.coolerpromc.coolerconfig:coolerconfig-common-${minecraft_version}:${cooler_config_version}"
+    compileOnly "com.coolerpromc.coolerconfig:coolerconfig-common-${dependencies_minecraft_version}:${cooler_config_version}"
 }
 
 configurations {
