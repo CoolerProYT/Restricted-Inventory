@@ -78,7 +78,7 @@ jar {
 tasks.publishMods.dependsOn(tasks.reobfJar)
 
 publishMods {
-    file.set(jar.archiveFile)
+    file.set(tasks.named('reobfJar').flatMap { it.archiveFile })
     type = BETA
     modLoaders.add("forge")
     changelog = rootProject.file("changelog.md").text
