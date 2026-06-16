@@ -3,12 +3,14 @@ package com.coolerpromc.restrictedinventory.platform;
 import com.coolerpromc.restrictedinventory.Constants;
 import com.coolerpromc.restrictedinventory.platform.services.INetworkHelper;
 import com.coolerpromc.restrictedinventory.platform.services.IPlatformHelper;
+import com.coolerpromc.restrictedinventory.platform.services.ISlotHelper;
 
 import java.util.ServiceLoader;
 
 public class Services {
     public static final IPlatformHelper PLATFORM = load(IPlatformHelper.class);
     public static final INetworkHelper NETWORK = load(INetworkHelper.class);
+    public static final ISlotHelper SLOT = load(ISlotHelper.class);
 
     public static <T> T load(Class<T> clazz) {
         final T loadedService = ServiceLoader.load(clazz, Services.class.getClassLoader())

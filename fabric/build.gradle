@@ -33,6 +33,7 @@ loom {
             server()
             setConfigName('Fabric Server')
             ideConfigGenerated(true)
+            serverWithGui()
             runDir('runs/server')
         }
     }
