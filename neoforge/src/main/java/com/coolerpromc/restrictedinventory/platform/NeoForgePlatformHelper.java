@@ -4,6 +4,7 @@ import com.coolerpromc.restrictedinventory.NeoForgeRestrictedInventory;
 import com.coolerpromc.restrictedinventory.network.ClientBoundAttachmentSyncPacket;
 import com.coolerpromc.restrictedinventory.platform.services.IPlatformHelper;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.loading.FMLEnvironment;
@@ -50,6 +51,14 @@ public class NeoForgePlatformHelper implements IPlatformHelper {
     public void syncRestrictedSlots(Map<Integer, String> restrictedSlots) {
         if (ServerLifecycleHooks.getCurrentServer() != null){
             ServerLifecycleHooks.getCurrentServer().getPlayerList().getPlayers().forEach(p -> setRestrictedSlots(p, restrictedSlots));
+        }
+    }
+
+    @Override
+    public void updatePlayersPermission() {
+        MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+        if (server != null){
+            server.getPlayerList().getPlayers().forEach(p -> server.getPlayerList().sendPlayerPermissionLevel(p));
         }
     }
 }
