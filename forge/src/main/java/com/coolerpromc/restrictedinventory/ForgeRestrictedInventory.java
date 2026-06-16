@@ -1,12 +1,12 @@
 package com.coolerpromc.restrictedinventory;
 
-import com.coolerpromc.restrictedinventory.network.ClientBoundAttachmentSyncPacket;
-import com.coolerpromc.restrictedinventory.network.ClientBoundNotifyUpdatePacket;
-import com.coolerpromc.restrictedinventory.network.ServerBoundClientRestrictedSlotsPacket;
+import com.coolerpromc.restrictedinventory.command.ModCommands;
+import com.coolerpromc.restrictedinventory.network.*;
 import com.coolerpromc.restrictedinventory.platform.util.ForgeClientPayloadContext;
 import com.coolerpromc.restrictedinventory.platform.util.ForgePayloadContext;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.OnDatapackSyncEvent;
+import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.simple.SimpleChannel;
@@ -25,6 +25,7 @@ public class ForgeRestrictedInventory {
         RestrictedInventory.init();
 
         MinecraftForge.EVENT_BUS.addListener(this::onDatapackSync);
+        MinecraftForge.EVENT_BUS.addListener(this::onRegisterCommands);
         this.onRegisterPayloadHandlers();
     }
 
@@ -37,7 +38,15 @@ public class ForgeRestrictedInventory {
             p.handle(new ForgePayloadContext(c.get()));
             c.get().setPacketHandled(true);
         });
+        CHANNEL.registerMessage(3, ServerBoundRestrictionUpdatePacket.class, ServerBoundRestrictionUpdatePacket::encode, ServerBoundRestrictionUpdatePacket::decode, (p, c) -> {
+            p.handle(new ForgePayloadContext(c.get()));
+            c.get().setPacketHandled(true);
+        });
         CHANNEL.registerMessage(1, ClientBoundNotifyUpdatePacket.class, ClientBoundNotifyUpdatePacket::encode, ClientBoundNotifyUpdatePacket::decode, (p, c) -> {
+            p.handle(new ForgeClientPayloadContext(c.get()));
+            c.get().setPacketHandled(true);
+        });
+        CHANNEL.registerMessage(4, ClientBoundCommonConfigSyncPacket.class, ClientBoundCommonConfigSyncPacket::encode, ClientBoundCommonConfigSyncPacket::decode, (p, c) -> {
             p.handle(new ForgeClientPayloadContext(c.get()));
             c.get().setPacketHandled(true);
         });
@@ -45,5 +54,9 @@ public class ForgeRestrictedInventory {
             p.handle(new ForgeClientPayloadContext(c.get()));
             c.get().setPacketHandled(true);
         });
+    }
+
+    public void onRegisterCommands(RegisterCommandsEvent event) {
+        ModCommands.register(event.getDispatcher());
     }
 }

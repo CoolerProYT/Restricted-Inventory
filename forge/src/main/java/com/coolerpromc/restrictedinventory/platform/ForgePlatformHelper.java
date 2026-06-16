@@ -5,6 +5,7 @@ import com.coolerpromc.restrictedinventory.capability.ModCapabilities;
 import com.coolerpromc.restrictedinventory.network.ClientBoundAttachmentSyncPacket;
 import com.coolerpromc.restrictedinventory.platform.services.IPlatformHelper;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLEnvironment;
@@ -52,6 +53,14 @@ public class ForgePlatformHelper implements IPlatformHelper {
     public void syncRestrictedSlots(Map<Integer, String> restrictedSlots) {
         if (ServerLifecycleHooks.getCurrentServer() != null){
             ServerLifecycleHooks.getCurrentServer().getPlayerList().getPlayers().forEach(p -> setRestrictedSlots(p, restrictedSlots));
+        }
+    }
+
+    @Override
+    public void updatePlayersPermission() {
+        MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+        if (server != null){
+            server.getPlayerList().getPlayers().forEach(p -> server.getPlayerList().sendPlayerPermissionLevel(p));
         }
     }
 }

@@ -53,4 +53,12 @@ public class FabricPlatformHelper implements IPlatformHelper {
             PlayerLookup.all(server).forEach(p -> setRestrictedSlots(p, restrictedSlots));
         }
     }
+
+    @Override
+    public void updatePlayersPermission() {
+        MinecraftServer server = FabricRestrictedInventory.MINECRAFT_SERVER;
+        if (server != null){
+            server.getPlayerList().getPlayers().forEach(p -> server.getPlayerList().sendPlayerPermissionLevel(p));
+        }
+    }
 }

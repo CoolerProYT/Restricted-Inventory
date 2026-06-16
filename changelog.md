@@ -1,7 +1,5 @@
-## 20.1.1
-### Forge
-- Added compatibility to menu that use `DisableableSlot` from `Titanium`
-- Added compatibility to gui that wrap player inventory to `InvWrapper`
-
-### Fabric
-No changes.
+## 20.1.2
+- Added command `/restrictedinventory config` to open config screen
+- Added config screen to set restricted item/tag for inventory
+- Inventory restricted slot no longer render ghost item if the slot is not empty
+- Fixed log warn for serialization error

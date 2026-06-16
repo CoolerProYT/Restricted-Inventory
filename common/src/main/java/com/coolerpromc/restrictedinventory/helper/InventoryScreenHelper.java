@@ -40,7 +40,7 @@ public class InventoryScreenHelper {
         Player player = Minecraft.getInstance().player;
         for (Map.Entry<Integer, String> restrictedSlot : CommonConfig.restrictedSlots(player).entrySet()){
             Slot slot = getSlotByInventoryIndex(screen.getMenu().slots, restrictedSlot.getKey());
-            if (slot != null){
+            if (slot != null && slot.getItem().isEmpty()){
                 int x = slot.x + accessor.restrictedinventory$getLeftPos();
                 int y = slot.y + accessor.restrictedinventory$getTopPos();
 
