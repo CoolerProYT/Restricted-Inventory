@@ -3,7 +3,11 @@
   "minVersion": "0.8",
   "package": "com.coolerpromc.restrictedinventory.mixin",
   "compatibilityLevel": "JAVA_21",
-  "mixins": [],
+  "mixins": [
+    "ResourceHandlerSloMixin",
+    "SlotItemHandlerMixin",
+    "accessor.VanillaContainerWrapperAccessor"
+  ],
   "server": [],
   "injectors": {
     "defaultRequire": 1

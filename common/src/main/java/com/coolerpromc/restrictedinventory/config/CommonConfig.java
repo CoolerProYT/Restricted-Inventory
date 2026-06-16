@@ -2,6 +2,7 @@ package com.coolerpromc.restrictedinventory.config;
 
 import com.coolerpromc.coolerconfig.config.*;
 import com.coolerpromc.restrictedinventory.Constants;
+import com.coolerpromc.restrictedinventory.network.ClientBoundCommonConfigSyncPacket;
 import com.coolerpromc.restrictedinventory.network.ClientBoundNotifyUpdatePacket;
 import com.coolerpromc.restrictedinventory.platform.Services;
 import net.minecraft.world.entity.player.Player;
@@ -12,6 +13,7 @@ import java.util.stream.Collectors;
 public class CommonConfig {
     public static final ConfigValue<Boolean> USE_CLIENT_RESTRICTION;
     public static final ConfigValue<Map<String, String>> RESTRICTED_SLOTS;
+    public static ClientCache clientCache = ClientCache.EMPTY;
 
     public static ConfigSpec CONFIG;
 
@@ -34,6 +36,10 @@ public class CommonConfig {
                     Services.NETWORK.sendToAllPlayer(new ClientBoundNotifyUpdatePacket());
                 } catch (Exception _){}
             }
+            try{
+                Services.NETWORK.sendToAllPlayer(new ClientBoundCommonConfigSyncPacket(USE_CLIENT_RESTRICTION.get()));
+                Services.PLATFORM.updatePlayersPermission();
+            }catch (Exception _){}
         });
     }
 
@@ -47,5 +53,9 @@ public class CommonConfig {
 
     public static boolean useClientRestriction(){
         return USE_CLIENT_RESTRICTION.get();
+    }
+
+    public record ClientCache(boolean useClientRestriction, Map<Integer, String> restrictedSlots){
+        public static final ClientCache EMPTY = new ClientCache(false, Map.of());
     }
 }

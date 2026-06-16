@@ -16,6 +16,37 @@ When a slot is restricted:
 - Picked-up items are automatically routed to their allowed slots first; if no allowed slot is available, the item falls back to unrestricted slots
 - The restricted slot displays a ghost item preview with a gray overlay so the player knows what belongs there
 
+## Commands
+
+All commands use the `/restrictedinventory` prefix.
+
+| Command | Description | Permission |
+|---------|-------------|------------|
+| `/restrictedinventory config` | Opens the Restriction Config Screen | Admin (OP level 4), or any player when `useClientRestriction` is enabled |
+
+### Permission rules
+
+- When `useClientRestriction` is **false** (server-wide mode): only server operators (OP level 4) can open the config screen.
+- When `useClientRestriction` is **true** (per-client mode): every player can open their own config screen.
+
+## Restriction Config Screen
+
+The config screen is the in-game GUI for editing slot restrictions. Open it with `/restrictedinventory config`.
+
+### Item / Tag picker (top panel)
+
+- **Items tab** — lists every registered item at ¾ scale. Hover for the item name and registry ID. Click to select.
+- **Tags tab** — lists every registered item tag. Each tag cycles through its members as a live preview. Hover for the tag ID. Click to select.
+- Scroll with the mouse wheel or drag the scrollbar on the right.
+
+### Slot grid (middle panel)
+
+- Displays all 36 player inventory slots (0–35) laid out in the standard inventory arrangement.
+- Each slot shows a cycling preview of its current restriction, or is empty if unrestricted.
+- Left-Click a slot to **select** it (highlighted in white). The selected slot will receive the item or tag chosen in the picker.
+- Right-Click a slot to remove the item or tag chosen.
+- Hover a slot to see its current restriction value as a tooltip.
+
 ## Configuration
 
 The mod uses JSON config files (powered by [CoolerConfig](https://github.com/CoolerProMC/CoolerConfig)).

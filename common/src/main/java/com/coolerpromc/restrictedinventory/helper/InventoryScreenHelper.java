@@ -2,6 +2,7 @@ package com.coolerpromc.restrictedinventory.helper;
 
 import com.coolerpromc.restrictedinventory.config.CommonConfig;
 import com.coolerpromc.restrictedinventory.mixin.accessor.AbstractContainerScreenAccessor;
+import com.coolerpromc.restrictedinventory.platform.Services;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -38,7 +39,7 @@ public class InventoryScreenHelper {
         Player player = Minecraft.getInstance().player;
         for (Map.Entry<Integer, String> restrictedSlot : CommonConfig.restrictedSlots(player).entrySet()){
             Slot slot = getSlotByInventoryIndex(screen.getMenu().slots, restrictedSlot.getKey());
-            if (slot != null){
+            if (slot != null && slot.getItem().isEmpty()){
                 int x = slot.x + accessor.restrictedinventory$getLeftPos();
                 int y = slot.y + accessor.restrictedinventory$getTopPos();
 
@@ -64,7 +65,7 @@ public class InventoryScreenHelper {
     }
 
     private static boolean isModifiableSlot(Slot slot) {
-        return slot.container instanceof Inventory && !(slot instanceof ArmorSlot) && slot.getContainerSlot() >= 0 && slot.getContainerSlot() <= 35;
+        return (slot.container instanceof Inventory && !(slot instanceof ArmorSlot) && slot.getContainerSlot() >= 0 && slot.getContainerSlot() <= 35) || Services.SLOT.isModifiableSlot(slot);
     }
 
     private static @Nullable Slot getSlotByInventoryIndex(NonNullList<Slot> slots, int index){

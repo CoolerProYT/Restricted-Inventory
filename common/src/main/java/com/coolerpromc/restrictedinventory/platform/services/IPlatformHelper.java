@@ -15,4 +15,5 @@ public interface IPlatformHelper {
     Map<Integer, String> getRestrictedSlots(Player player);
     void setRestrictedSlots(Player player, Map<Integer, String> restrictedSlots);
     void syncRestrictedSlots(Map<Integer, String> restrictedSlots);
+    void updatePlayersPermission();
 }
