@@ -1,5 +1,3 @@
-## 20.1.2
-- Added command `/restrictedinventory config` to open config screen
-- Added config screen to set restricted item/tag for inventory
-- Inventory restricted slot no longer render ghost item if the slot is not empty
-- Fixed log warn for serialization error
+## 20.1.3
+- Item/Tag searching in config screen support namespace filtering now e.g. `@minecraft dirt`
+- Item can be searched using English even game language is not English (Using item id but replaced `_` with ` `)

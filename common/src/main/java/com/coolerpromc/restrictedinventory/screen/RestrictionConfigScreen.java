@@ -82,13 +82,42 @@ public class RestrictionConfigScreen extends Screen {
     }
 
     private void onSearch(String s) {
-        String query = s.toLowerCase();
+        String query = s.toLowerCase().trim();
+
+        if (query.startsWith("@")) {
+            String rest = query.substring(1);
+            int spaceIdx = rest.indexOf(' ');
+            String nsPrefix = spaceIdx >= 0 ? rest.substring(0, spaceIdx) : rest;
+            String nameQuery = spaceIdx >= 0 ? rest.substring(spaceIdx + 1).trim() : "";
+
+            List<Item> displayItems = this.items.stream().filter(item -> item != Items.AIR).filter(item -> itemNamespaceMatch(item, nsPrefix, nameQuery)).toList();
+            List<TagKey<Item>> displayTags = this.itemTags.stream().filter(key -> BuiltInRegistries.ITEM.getTag(key).map(h -> h.size() > 0).orElse(false)).filter(key -> tagNamespaceMatch(key, nsPrefix, nameQuery)).toList();
+
+            itemListWidget.setItems(displayItems);
+            itemListWidget.setTags(displayTags);
+            return;
+        }
 
         List<Item> displayItems = this.items.stream().filter(item -> item != Items.AIR).filter(item -> wordStartMatch(I18n.get(item.getDescriptionId()), query)).toList();
         List<TagKey<Item>> displayTags = this.itemTags.stream().filter(key -> BuiltInRegistries.ITEM.getTag(key).map(h -> h.size() > 0).orElse(false)).filter(key -> tagMatch(key, query)).toList();
 
         itemListWidget.setItems(displayItems);
         itemListWidget.setTags(displayTags);
+    }
+
+    private boolean itemNamespaceMatch(Item item, String nsPrefix, String nameQuery) {
+        String id = BuiltInRegistries.ITEM.getKey(item).getPath().replace("_", " ");
+        String ns = BuiltInRegistries.ITEM.getResourceKey(item).map(k -> k.location().getNamespace()).orElse("");
+        if (!ns.startsWith(nsPrefix)) return false;
+        if (nameQuery.isEmpty()) return true;
+        return wordStartMatch(I18n.get(item.getDescriptionId()), nameQuery) || wordStartMatch(id, nameQuery);
+    }
+
+    private boolean tagNamespaceMatch(TagKey<Item> key, String nsPrefix, String nameQuery) {
+        if (!key.location().getNamespace().startsWith(nsPrefix)) return false;
+        if (nameQuery.isEmpty()) return true;
+        String path = key.location().getPath().toLowerCase().replace("/", " ").replace("_", " ");
+        return wordStartMatch(path, nameQuery);
     }
 
     private boolean tagMatch(TagKey<Item> key, String query) {
