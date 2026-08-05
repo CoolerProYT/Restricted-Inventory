@@ -2,6 +2,9 @@ package com.coolerpromc.restrictedinventory.mixin;
 
 import com.coolerpromc.restrictedinventory.config.CommonConfig;
 import com.coolerpromc.restrictedinventory.mixin.accessor.InventoryAccessor;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
@@ -33,14 +36,24 @@ public abstract class InventoryMixin {
         }
     }
 
+    @WrapOperation(method = "placeItemBackInInventory(Lnet/minecraft/world/item/ItemStack;Z)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Inventory;getSlotWithRemainingSpace(Lnet/minecraft/world/item/ItemStack;)I"))
+    private int getSlotWithRemainingSpace(Inventory instance, ItemStack newItemStack, Operation<Integer> original){
+        Map<Integer, String> restricted = CommonConfig.restrictedSlots(instance.player);
+        return restrictedInventory$findValidSlot(instance, newItemStack, restricted);
+    }
+
+    @WrapOperation(method = "placeItemBackInInventory(Lnet/minecraft/world/item/ItemStack;Z)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Inventory;getFreeSlot()I"))
+    private int getFreeSlot(Inventory instance, Operation<Integer> original, @Local(argsOnly = true) ItemStack itemStack){
+        Map<Integer, String> restricted = CommonConfig.restrictedSlots(instance.player);
+        return restrictedInventory$findValidSlot(instance, itemStack, restricted);
+    }
+
     @Unique
     private int restrictedInventory$findValidSlot(Inventory inv, ItemStack incoming, Map<Integer, String> restricted) {
         for (int i = 0; i < 36; i++) {
             if (!restrictedInventory$isSlotAllowed(i, incoming, restricted)) continue;
             ItemStack existing = inv.getItem(i);
-            if (!existing.isEmpty()
-                    && ItemStack.isSameItemSameTags(existing, incoming)
-                    && existing.getCount() < inv.getMaxStackSize()) {
+            if (!existing.isEmpty() && ItemStack.isSameItemSameTags(existing, incoming) && existing.getCount() < inv.getMaxStackSize()) {
                 return i;
             }
         }

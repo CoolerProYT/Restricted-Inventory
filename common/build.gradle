@@ -17,6 +17,8 @@ legacyForge  {
 dependencies {
     compileOnly "org.spongepowered:mixin:0.8.5"
     implementation "com.google.code.findbugs:jsr305:3.0.1"
+    compileOnly "io.github.llamalad7:mixinextras-common:0.5.3"
+    annotationProcessor "io.github.llamalad7:mixinextras-common:0.5.3"
 
     compileOnly "com.coolerpromc.coolerconfig:coolerconfig-common-${minecraft_version}:${cooler_config_version}"
 }
