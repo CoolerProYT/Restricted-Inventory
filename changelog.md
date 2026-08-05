@@ -1,3 +1,2 @@
-## 21.1.4
-- Item/Tag searching in config screen support namespace filtering now e.g. `@minecraft dirt`
-- Item can be searched using English even game language is not English (Using item id but replaced `_` with ` `)
+## 21.1.5
+- Fixed carried item insert to restricted slot directly if non-restricted slot are full when closing inventory screen
