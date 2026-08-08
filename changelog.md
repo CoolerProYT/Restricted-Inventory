@@ -1,2 +1,3 @@
-## 20.1.4
-- Fixed carried item insert to restricted slot directly if non-restricted slot are full when closing inventory screen
+## 20.1.5
+### Fabric
+- Added compatibility to `Inmis` backpack inventory
