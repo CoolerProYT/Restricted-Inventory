@@ -6,8 +6,10 @@ import net.minecraft.world.Container;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.injection.At;
 
+@Pseudo
 @Mixin(targets = "draylar.inmis.ui.BackpackScreenHandler$BackpackLockedSlot", remap = false)
 public abstract class BackpackLockedSlotMixin extends Slot {
     public BackpackLockedSlotMixin(Container container, int slot, int x, int y) {
