@@ -1,3 +1,5 @@
-## 20.1.5
+## 20.1.6
+- Fake Item rendered in restricted slot now use lower transparency instead of filling with background color
+- 
 ### Fabric
-- Added compatibility to `Inmis` backpack inventory
+- Added compatibility to `Forgotten Graves`

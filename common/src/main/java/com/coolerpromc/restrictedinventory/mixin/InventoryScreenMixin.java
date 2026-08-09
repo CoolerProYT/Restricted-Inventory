@@ -25,7 +25,7 @@ public abstract class InventoryScreenMixin<T extends AbstractContainerMenu> exte
         super(title);
     }
 
-    @Inject(method = "render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V", at = @At("HEAD"))
+    @Inject(method = "render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V", at = @At("RETURN"))
     public void extractContents(GuiGraphics graphics, int mouseX, int mouseY, float a, CallbackInfo ci){
         InventoryScreenHelper.extractRestrictedSlot(graphics, (AbstractContainerScreen<T>)(Object)this);
         if (restrictedInventory$isTabDown && ClientConfig.showSlotIndex()){

@@ -52,11 +52,9 @@ repositories {
             includeGroup "curse.maven"
         }
     }
-    repositories {
-        maven {
-            name = 'CoolerProMC'
-            url = 'https://maven.coolerpromc.com/releases'
-        }
+    maven {
+        name = 'CoolerProMC'
+        url = 'https://maven.coolerpromc.com/releases'
     }
 }
 

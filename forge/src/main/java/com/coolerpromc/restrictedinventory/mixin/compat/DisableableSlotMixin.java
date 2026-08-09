@@ -1,6 +1,5 @@
 package com.coolerpromc.restrictedinventory.mixin.compat;
 
-import com.coolerpromc.restrictedinventory.Constants;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.minecraft.world.Container;
