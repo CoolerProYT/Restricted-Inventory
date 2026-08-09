@@ -3,6 +3,7 @@ package com.coolerpromc.restrictedinventory.helper;
 import com.coolerpromc.restrictedinventory.config.CommonConfig;
 import com.coolerpromc.restrictedinventory.mixin.accessor.AbstractContainerScreenAccessor;
 import com.coolerpromc.restrictedinventory.platform.Services;
+import com.coolerpromc.restrictedinventory.util.GhostItemOpacity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -10,12 +11,12 @@ import net.minecraft.core.HolderSet;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.ArmorSlot;
 import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ArmorSlot;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
 import org.jspecify.annotations.Nullable;
@@ -37,6 +38,7 @@ public class InventoryScreenHelper {
     public static <T extends AbstractContainerMenu> void extractRestrictedSlot(GuiGraphicsExtractor graphics, AbstractContainerScreen<T> screen) {
         AbstractContainerScreenAccessor accessor = (AbstractContainerScreenAccessor) screen;
         Player player = Minecraft.getInstance().player;
+
         for (Map.Entry<Integer, String> restrictedSlot : CommonConfig.restrictedSlots(player).entrySet()){
             Slot slot = getSlotByInventoryIndex(screen.getMenu().slots, restrictedSlot.getKey());
             if (slot != null && slot.getItem().isEmpty()){
@@ -52,14 +54,13 @@ public class InventoryScreenHelper {
                     if (size > 0) {
                         int index = (int) ((System.currentTimeMillis() / 1000) % size);
                         Item tagItem = items.get(index).value();
-                        graphics.fakeItem(tagItem.getDefaultInstance(), x, y);
+                        GhostItemOpacity.render(0.15f, () -> graphics.fakeItem(tagItem.getDefaultInstance(), x, y));
                     }
                 }
                 else {
                     Item item = BuiltInRegistries.ITEM.getValue(Identifier.parse(value));
-                    graphics.fakeItem(item.getDefaultInstance(), x, y);
+                    GhostItemOpacity.render(0.15f, () -> graphics.fakeItem(item.getDefaultInstance(), x, y));
                 }
-                graphics.fill(x, y, x + 16, y + 16, 0xCC8B8B8B);
             }
         }
     }
