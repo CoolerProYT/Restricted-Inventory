@@ -1,2 +1,2 @@
-## 26.2.0.3
-- Fixed carried item insert to restricted slot directly if non-restricted slot are full when closing inventory screen
+## 26.2.0.4
+- Fake Item rendered in restricted slot now use lower transparency instead of filling with background color
