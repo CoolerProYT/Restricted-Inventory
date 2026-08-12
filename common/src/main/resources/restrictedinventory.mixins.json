@@ -15,6 +15,7 @@
   "client": [
     "InventoryScreenMixin",
     "accessor.AbstractContainerScreenAccessor",
+    "accessor.MultiLineEditBoxAccessor",
     "accessor.ScreenAccessor"
   ]
 }
