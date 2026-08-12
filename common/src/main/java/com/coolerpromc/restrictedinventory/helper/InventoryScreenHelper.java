@@ -1,26 +1,24 @@
 package com.coolerpromc.restrictedinventory.helper;
 
 import com.coolerpromc.restrictedinventory.config.CommonConfig;
+import com.coolerpromc.restrictedinventory.config.util.ItemEntry;
 import com.coolerpromc.restrictedinventory.mixin.accessor.AbstractContainerScreenAccessor;
 import com.coolerpromc.restrictedinventory.platform.Services;
 import com.coolerpromc.restrictedinventory.util.GhostItemOpacity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.core.HolderSet;
 import net.minecraft.core.NonNullList;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
-import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ArmorSlot;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import org.jspecify.annotations.Nullable;
 
+import java.util.List;
 import java.util.Map;
 
 public class InventoryScreenHelper {
@@ -39,27 +37,20 @@ public class InventoryScreenHelper {
         AbstractContainerScreenAccessor accessor = (AbstractContainerScreenAccessor) screen;
         Player player = Minecraft.getInstance().player;
 
-        for (Map.Entry<Integer, String> restrictedSlot : CommonConfig.restrictedSlots(player).entrySet()){
+        for (Map.Entry<Integer, ItemEntry> restrictedSlot : CommonConfig.restrictedSlots(player).entrySet()) {
             Slot slot = getSlotByInventoryIndex(screen.getMenu().slots, restrictedSlot.getKey());
             if (slot != null && slot.getItem().isEmpty()){
                 int x = slot.x + accessor.restrictedinventory$getLeftPos();
                 int y = slot.y + accessor.restrictedinventory$getTopPos();
 
-                String value = CommonConfig.restrictedSlots(player).get(slot.getContainerSlot());
-                if (value.startsWith("#")){
-                    TagKey<Item> tag = TagKey.create(Registries.ITEM, Identifier.parse(value.substring(1)));
-                    HolderSet<Item> items = BuiltInRegistries.ITEM.getOrThrow(tag);
+                ItemEntry value = CommonConfig.restrictedSlots(player).get(slot.getContainerSlot());
+                List<Item> items = value.items();
 
-                    int size = items.size();
-                    if (size > 0) {
-                        int index = (int) ((System.currentTimeMillis() / 1000) % size);
-                        Item tagItem = items.get(index).value();
-                        GhostItemOpacity.render(0.15f, () -> graphics.fakeItem(tagItem.getDefaultInstance(), x, y));
-                    }
-                }
-                else {
-                    Item item = BuiltInRegistries.ITEM.getValue(Identifier.parse(value));
-                    GhostItemOpacity.render(0.15f, () -> graphics.fakeItem(item.getDefaultInstance(), x, y));
+                int size = items.size();
+                if (size > 0) {
+                    int index = (int) ((System.currentTimeMillis() / 1000) % size);
+                    ItemStack stack = value.display(items.get(index), player.registryAccess());
+                    GhostItemOpacity.render(0.15f, () -> graphics.fakeItem(stack, x, y));
                 }
             }
         }
