@@ -1,13 +1,9 @@
 package com.coolerpromc.restrictedinventory.mixin;
 
 import com.coolerpromc.restrictedinventory.config.CommonConfig;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.TagKey;
-import net.minecraft.core.registries.Registries;
+import com.coolerpromc.restrictedinventory.config.util.ItemEntry;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
@@ -84,23 +80,14 @@ public abstract class ForgottenGravesInventoryMixin {
 
     @Unique
     private static boolean restrictedinventory$mayPlace(Player player, int slot, ItemStack stack) {
-        Map<Integer, String> restrictedSlots = CommonConfig.restrictedSlots(player);
-        String restriction = restrictedSlots.get(slot);
+        Map<Integer, ItemEntry> restrictedSlots = CommonConfig.restrictedSlots(player);
+        ItemEntry restriction = restrictedSlots.get(slot);
 
-        if (restriction == null || restriction.isBlank()) {
+        if (restriction == null || restriction.item().isBlank()) {
             return true;
         }
 
-        if (restriction.startsWith("#")) {
-            ResourceLocation tagId = new ResourceLocation(restriction.substring(1));
-
-            TagKey<Item> tag = TagKey.create(Registries.ITEM, tagId);
-            return stack.is(tag);
-        }
-
-        ResourceLocation itemId = new ResourceLocation(restriction);
-
-        return BuiltInRegistries.ITEM.getKey(stack.getItem()).equals(itemId);
+        return restriction.matches(stack);
     }
 
     @Unique

@@ -1,5 +1,7 @@
 package com.coolerpromc.restrictedinventory.capability;
 
+import com.coolerpromc.restrictedinventory.Constants;
+import com.coolerpromc.restrictedinventory.config.util.ItemEntry;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraftforge.common.capabilities.Capability;
@@ -24,14 +26,28 @@ public class RestrictedSlotsProvider implements ICapabilityProvider, INBTSeriali
     @Override
     public CompoundTag serializeNBT() {
         CompoundTag tag = new CompoundTag();
-        cap.getRestrictedSlots().forEach((k, v) -> tag.putString(k.toString(), v));
+        cap.getRestrictedSlots().forEach((k, v) -> tag.put(k.toString(), v.serializeNbt()));
         return tag;
     }
 
     @Override
     public void deserializeNBT(CompoundTag tag) {
-        Map<Integer, String> map = new HashMap<>();
-        tag.getAllKeys().forEach(k -> map.put(Integer.parseInt(k), tag.getString(k)));
+        Map<Integer, ItemEntry> map = new HashMap<>();
+
+        // anything unreadable here is skipped rather than thrown: this runs inside player data
+        // loading, where an exception costs the player their login
+        for (String key : tag.getAllKeys()) {
+            int slot;
+            try {
+                slot = Integer.parseInt(key);
+            } catch (NumberFormatException e) {
+                Constants.LOGGER.warn("Ignoring restricted slot with non numeric index {}", key);
+                continue;
+            }
+
+            ItemEntry.read(tag.get(key)).ifPresent(entry -> map.put(slot, entry));
+        }
+
         cap.setRestrictedSlots(map);
     }
 }

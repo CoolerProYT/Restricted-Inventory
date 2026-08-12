@@ -1,14 +1,10 @@
 package com.coolerpromc.restrictedinventory.helper;
 
 import com.coolerpromc.restrictedinventory.config.CommonConfig;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.TagKey;
+import com.coolerpromc.restrictedinventory.config.util.ItemEntry;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.Slot;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.Set;
@@ -19,15 +15,8 @@ public class SlotHelper {
             Player player = inventory.player;
             Set<Integer> indexes = CommonConfig.restrictedSlots(player).keySet();
             if (indexes.contains(slot.getContainerSlot()) && isModifiableSlot(slot)){
-                String value = CommonConfig.restrictedSlots(player).get(slot.getContainerSlot());
-                if (value.startsWith("#")){
-                    TagKey<Item> tag = TagKey.create(Registries.ITEM, new ResourceLocation(value.substring(1)));
-                    return stack.is(tag);
-                }
-                else {
-                    Item item = BuiltInRegistries.ITEM.get(new ResourceLocation(value));
-                    return stack.is(item);
-                }
+                ItemEntry value = CommonConfig.restrictedSlots(player).get(slot.getContainerSlot());
+                return value.matches(stack);
             }
         }
         return true;

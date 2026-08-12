@@ -12,7 +12,11 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 
+import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.List;
 
 public class ScrollableItemListWidget extends AbstractWidget {
@@ -22,7 +26,7 @@ public class ScrollableItemListWidget extends AbstractWidget {
     private static final int SCROLLBAR_WIDTH = 5;
     private static final int TAB_HEIGHT = 12;
 
-    private List<Item> items;
+    private List<ItemStack> items;
     private List<TagKey<Item>> tags;
     private Mode mode = Mode.ITEMS;
     private double scrollAmount = 0;
@@ -31,14 +35,14 @@ public class ScrollableItemListWidget extends AbstractWidget {
     private int selectedIndex = -1;
     private final OnClick select;
 
-    public ScrollableItemListWidget(int x, int y, int width, int height, List<Item> items, List<TagKey<Item>> tags, OnClick select) {
+    public ScrollableItemListWidget(int x, int y, int width, int height, List<ItemStack> items, List<TagKey<Item>> tags, OnClick select) {
         super(x, y, width, height, Component.empty());
         this.items = items;
         this.tags = tags;
         this.select = select;
     }
 
-    public void setItems(List<Item> items) {
+    public void setItems(List<ItemStack> items) {
         this.items = items;
         if (mode == Mode.ITEMS) this.scrollAmount = 0;
     }
@@ -51,10 +55,16 @@ public class ScrollableItemListWidget extends AbstractWidget {
     public String getSelectedString() {
         if (selectedIndex < 0 || selectedIndex >= getCurrentSize()) return null;
         if (mode == Mode.ITEMS) {
-            return BuiltInRegistries.ITEM.getKey(items.get(selectedIndex)).toString();
+            return BuiltInRegistries.ITEM.getKey(items.get(selectedIndex).getItem()).toString();
         } else {
             return "#" + tags.get(selectedIndex).location();
         }
+    }
+
+    @Nullable
+    public ItemStack getSelectedStack() {
+        if (mode != Mode.ITEMS || selectedIndex < 0 || selectedIndex >= getCurrentSize()) return null;
+        return items.get(selectedIndex);
     }
 
     private int getListY() { return getY() + TAB_HEIGHT; }
@@ -142,8 +152,8 @@ public class ScrollableItemListWidget extends AbstractWidget {
 
             if (drawY + ITEM_SIZE < getListY() || drawY > getListY() + getListHeight()) continue;
 
-            Item renderItem = resolveItem(i);
-            if (renderItem == null) continue;
+            ItemStack renderStack = resolveStack(i);
+            if (renderStack == null) continue;
 
             boolean hovered = i == hoveredIndex;
 
@@ -159,7 +169,7 @@ public class ScrollableItemListWidget extends AbstractWidget {
             graphics.pose().pushPose();
             graphics.pose().translate(drawX + 1, drawY + 1, 0);
             graphics.pose().scale(0.75f, 0.75f, 0.75f);
-            graphics.renderFakeItem(renderItem.getDefaultInstance(), 0, 0);
+            graphics.renderFakeItem(renderStack, 0, 0);
             graphics.pose().popPose();
         }
 
@@ -180,22 +190,25 @@ public class ScrollableItemListWidget extends AbstractWidget {
     }
 
     private List<Component> buildTooltip(int index) {
-        if (mode == Mode.ITEMS) {
-            Item item = items.get(index);
-            return List.of(item.getDefaultInstance().getHoverName(), Component.literal(BuiltInRegistries.ITEM.getKey(item).toString()).withStyle(ChatFormatting.DARK_GRAY));
-        } else {
+        if (mode != Mode.ITEMS) {
             return List.of(Component.literal("#" + tags.get(index).location()));
         }
+
+        ItemStack stack = items.get(index);
+        List<Component> lines = new ArrayList<>(stack.getTooltipLines(Minecraft.getInstance().player, TooltipFlag.Default.NORMAL));
+        lines.add(Component.literal(BuiltInRegistries.ITEM.getKey(stack.getItem()).toString()).withStyle(ChatFormatting.DARK_GRAY));
+        return lines;
     }
 
-    private Item resolveItem(int index) {
+    @Nullable
+    private ItemStack resolveStack(int index) {
         if (mode == Mode.ITEMS) {
             return items.get(index);
         }
         HolderSet<Item> members = BuiltInRegistries.ITEM.getOrCreateTag(tags.get(index));
         if (members.size() == 0) return null;
         int cycleIndex = (int) ((System.currentTimeMillis() / 1000) % members.size());
-        return members.get(cycleIndex).value();
+        return members.get(cycleIndex).value().getDefaultInstance();
     }
 
     @Override

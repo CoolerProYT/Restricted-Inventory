@@ -1,6 +1,7 @@
 package com.coolerpromc.restrictedinventory;
 
 import com.coolerpromc.restrictedinventory.command.ModCommands;
+import com.coolerpromc.restrictedinventory.config.util.ItemEntry;
 import com.coolerpromc.restrictedinventory.network.ServerBoundClientRestrictedSlotsPacket;
 import com.coolerpromc.restrictedinventory.network.ServerBoundRestrictionUpdatePacket;
 import com.coolerpromc.restrictedinventory.platform.util.FabricPayloadContext;
@@ -18,10 +19,10 @@ import java.util.Map;
 
 public class FabricRestrictedInventory implements ModInitializer {
     public static MinecraftServer MINECRAFT_SERVER;
-    public static final AttachmentType<Map<Integer, String>> RESTRICTED_SLOTS_ATTACHMENT =
-            AttachmentRegistry.<Map<Integer, String>>builder()
+    public static final AttachmentType<Map<Integer, ItemEntry>> RESTRICTED_SLOTS_ATTACHMENT =
+            AttachmentRegistry.<Map<Integer, ItemEntry>>builder()
                     .copyOnDeath().initializer(HashMap::new)
-                    .persistent(Codec.unboundedMap(Codec.STRING.xmap(Integer::parseInt, Object::toString), Codec.STRING))
+                    .persistent(Codec.unboundedMap(Codec.STRING.xmap(Integer::parseInt, Object::toString), ItemEntry.STORAGE_CODEC))
                     .buildAndRegister(Constants.id("restricted_slots_attachment"));
 
     @Override
