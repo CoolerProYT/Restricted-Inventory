@@ -2,7 +2,7 @@ package com.coolerpromc.restrictedinventory.platform;
 
 import com.coolerpromc.restrictedinventory.capability.IRestrictedSlots;
 import com.coolerpromc.restrictedinventory.capability.ModCapabilities;
-import com.coolerpromc.restrictedinventory.config.util.ItemEntry;
+import com.coolerpromc.restrictedinventory.config.util.Restriction;
 import com.coolerpromc.restrictedinventory.network.ClientBoundAttachmentSyncPacket;
 import com.coolerpromc.restrictedinventory.platform.services.IPlatformHelper;
 import net.minecraft.server.MinecraftServer;
@@ -37,12 +37,12 @@ public class ForgePlatformHelper implements IPlatformHelper {
     }
 
     @Override
-    public Map<Integer, ItemEntry> getRestrictedSlots(Player player) {
+    public Map<Integer, Restriction> getRestrictedSlots(Player player) {
         return player.getCapability(ModCapabilities.RESTRICTED_SLOTS).map(IRestrictedSlots::getRestrictedSlots).orElse(Map.of());
     }
 
     @Override
-    public void setRestrictedSlots(Player player, Map<Integer, ItemEntry> restrictedSlots) {
+    public void setRestrictedSlots(Player player, Map<Integer, Restriction> restrictedSlots) {
         player.getCapability(ModCapabilities.RESTRICTED_SLOTS).ifPresent(cap -> cap.setRestrictedSlots(restrictedSlots));
 
         if (player instanceof ServerPlayer serverPlayer) {
@@ -51,7 +51,7 @@ public class ForgePlatformHelper implements IPlatformHelper {
     }
 
     @Override
-    public void syncRestrictedSlots(Map<Integer, ItemEntry> restrictedSlots) {
+    public void syncRestrictedSlots(Map<Integer, Restriction> restrictedSlots) {
         if (ServerLifecycleHooks.getCurrentServer() != null){
             ServerLifecycleHooks.getCurrentServer().getPlayerList().getPlayers().forEach(p -> setRestrictedSlots(p, restrictedSlots));
         }

@@ -1,7 +1,7 @@
 package com.coolerpromc.restrictedinventory.capability;
 
 import com.coolerpromc.restrictedinventory.Constants;
-import com.coolerpromc.restrictedinventory.config.util.ItemEntry;
+import com.coolerpromc.restrictedinventory.config.util.Restriction;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraftforge.common.capabilities.Capability;
@@ -32,7 +32,7 @@ public class RestrictedSlotsProvider implements ICapabilityProvider, INBTSeriali
 
     @Override
     public void deserializeNBT(CompoundTag tag) {
-        Map<Integer, ItemEntry> map = new HashMap<>();
+        Map<Integer, Restriction> map = new HashMap<>();
 
         // anything unreadable here is skipped rather than thrown: this runs inside player data
         // loading, where an exception costs the player their login
@@ -45,7 +45,7 @@ public class RestrictedSlotsProvider implements ICapabilityProvider, INBTSeriali
                 continue;
             }
 
-            ItemEntry.read(tag.get(key)).ifPresent(entry -> map.put(slot, entry));
+            Restriction.read(tag.get(key)).ifPresent(entry -> map.put(slot, entry));
         }
 
         cap.setRestrictedSlots(map);

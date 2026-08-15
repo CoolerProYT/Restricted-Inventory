@@ -7,6 +7,8 @@ A Minecraft mod that lets you lock specific player inventory slots to only accep
 - Restrict any inventory slot (0–35) to a specific item or item tag
 - Two restriction modes: server-wide (all players share the same rules) or per-client (each player has their own rules)
 - Visual overlay on restricted slots showing what item is required (cycles through tag members for tag-based restrictions)
+- Pin the slot icon to one exact item variant with `display`, without changing what the slot accepts
+- Group several entries — including NBT-specific ones — under one name and restrict a slot to the whole group
 - Hold **Tab** in any inventory screen to display slot indices — useful when setting up your config
 
 ## How It Works
@@ -58,7 +60,11 @@ Applies to the server. Controls all players unless `useClientRestriction` is ena
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `useClientRestriction` | boolean | `false` | When `true`, each player's restrictions come from their own client config instead of this file |
-| `restrictedSlots` | object | `{}` | Map of slot index → item ID or tag |
+| `restrictedSlots` | object | `{}` | Map of slot index → item ID, tag, or restriction entry |
+| `groups` | object | `{}` | Map of group name → list of entries a slot can be restricted to as a whole |
+
+Groups live in the common config only and are synced to every connecting client, so a group id means
+the same thing on both sides even when `useClientRestriction` is enabled.
 
 ### Client Config (`config/restrictedinventory-client.json`)
 
@@ -84,6 +90,11 @@ Hold **Tab** in-game with `showSlotIndex` enabled to see each slot's index overl
 |-------|---------|
 | `"minecraft:diamond"` | Only diamonds are allowed |
 | `"#minecraft:swords"` | Any item in the `minecraft:swords` tag is allowed |
+| `{"item": "...", "tag": {...}}` | The item, narrowed to stacks carrying that NBT |
+| `{"item": "...", "display": ...}` | The item, drawn as some other stack |
+| `{"group": "..."}` | Anything in the named restriction group |
+
+`tag` may also be written as `nbt`; both are read, and `tag` is what gets written back out.
 
 ### Example Config
 
@@ -99,6 +110,66 @@ Hold **Tab** in-game with `showSlotIndex` enabled to see each slot's index overl
 ```
 
 This locks hotbar slot 0 to torches, slot 1 to any sword, and slot 8 to totems of undying.
+
+### Custom Display
+
+A restriction may name a separate `display` stack. It only decides what the empty slot draws — it
+never changes what the slot accepts. This is what makes mods like TaCZ usable, where every gun
+shares one item ID and the actual weapon lives in NBT:
+
+```json
+{
+  "restrictedSlots": {
+    "0": {
+      "item": "tacz:modern_kinetic_gun",
+      "display": {
+        "item": "tacz:modern_kinetic_gun",
+        "nbt": { "GunId": "tacz:m4a1" }
+      }
+    }
+  }
+}
+```
+
+The slot accepts *any* TaCZ gun, because the restriction itself has no NBT filter, but draws the M4
+instead of the generic base item. `display` is optional; without it the slot renders exactly as
+before.
+
+### Restriction Groups
+
+A group is a named set of entries that a slot can be restricted to as a whole. The slot accepts an
+item when **any** entry in the group matches:
+
+```json
+{
+  "groups": {
+    "handguns": [
+      { "item": "tacz:modern_kinetic_gun", "nbt": { "GunId": "tacz:glock_17" } },
+      { "item": "tacz:modern_kinetic_gun", "nbt": { "GunId": "tacz:m1911" } }
+    ],
+    "flashlights": {
+      "entries": ["someflashlightmod:flashlight", "anothermod:torchlight"],
+      "display": "someflashlightmod:flashlight"
+    }
+  },
+  "restrictedSlots": {
+    "0": { "group": "restrictedinventory:handguns" },
+    "1": { "group": "flashlights" }
+  }
+}
+```
+
+- A group name without a namespace is read as `restrictedinventory:<name>`, so `handguns` and
+  `restrictedinventory:handguns` refer to the same group.
+- Entries may be plain item IDs, `#tags`, or item + NBT objects — the same forms a slot accepts.
+- Groups cannot contain other groups, so a group can never reference itself.
+- Written as a bare list, or as an object with `entries` and an optional group-wide `display`.
+- Without an explicit `display`, a group slot cycles through its members' icons.
+
+**Groups are not a replacement for item tags.** When you are grouping normal, distinct item IDs, a
+datapack item tag such as `#restrictedinventory:handguns` is still the better tool and keeps working
+unchanged. Reach for a RestrictedInventory group when the members differ only by NBT, which an item
+tag cannot express.
 
 ## Compatibility
 

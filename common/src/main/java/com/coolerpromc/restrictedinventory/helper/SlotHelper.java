@@ -1,7 +1,7 @@
 package com.coolerpromc.restrictedinventory.helper;
 
 import com.coolerpromc.restrictedinventory.config.CommonConfig;
-import com.coolerpromc.restrictedinventory.config.util.ItemEntry;
+import com.coolerpromc.restrictedinventory.config.util.Restriction;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.Slot;
@@ -15,7 +15,7 @@ public class SlotHelper {
             Player player = inventory.player;
             Set<Integer> indexes = CommonConfig.restrictedSlots(player).keySet();
             if (indexes.contains(slot.getContainerSlot()) && isModifiableSlot(slot)){
-                ItemEntry value = CommonConfig.restrictedSlots(player).get(slot.getContainerSlot());
+                Restriction value = CommonConfig.restrictedSlots(player).get(slot.getContainerSlot());
                 return value.matches(stack);
             }
         }

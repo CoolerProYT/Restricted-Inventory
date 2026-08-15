@@ -1,7 +1,7 @@
 package com.coolerpromc.restrictedinventory.mixin;
 
 import com.coolerpromc.restrictedinventory.config.CommonConfig;
-import com.coolerpromc.restrictedinventory.config.util.ItemEntry;
+import com.coolerpromc.restrictedinventory.config.util.Restriction;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -80,10 +80,10 @@ public abstract class ForgottenGravesInventoryMixin {
 
     @Unique
     private static boolean restrictedinventory$mayPlace(Player player, int slot, ItemStack stack) {
-        Map<Integer, ItemEntry> restrictedSlots = CommonConfig.restrictedSlots(player);
-        ItemEntry restriction = restrictedSlots.get(slot);
+        Map<Integer, Restriction> restrictedSlots = CommonConfig.restrictedSlots(player);
+        Restriction restriction = restrictedSlots.get(slot);
 
-        if (restriction == null || restriction.item().isBlank()) {
+        if (restriction == null) {
             return true;
         }
 

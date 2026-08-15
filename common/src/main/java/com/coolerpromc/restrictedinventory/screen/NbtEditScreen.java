@@ -40,7 +40,7 @@ public class NbtEditScreen extends Screen {
         this.slot = slot;
         this.entry = entry;
         this.previewItem = entry.items().stream().findFirst().orElse(null);
-        this.preview = previewItem == null ? ItemStack.EMPTY : entry.display(previewItem);
+        this.preview = previewItem == null ? ItemStack.EMPTY : entry.stackOf(previewItem);
         this.text = entry.tag().map(tag -> new SnbtPrinterTagVisitor().visit(tag)).orElse("");
     }
 
@@ -70,7 +70,7 @@ public class NbtEditScreen extends Screen {
         Optional<CompoundTag> parsed = parse(text);
 
         this.saveButton.active = this.error == null;
-        this.preview = previewItem == null ? ItemStack.EMPTY : new ItemEntry(entry.item(), parsed).display(previewItem);
+        this.preview = previewItem == null ? ItemStack.EMPTY : new ItemEntry(entry.item(), parsed).stackOf(previewItem);
     }
 
     private Optional<CompoundTag> parse(String text) {

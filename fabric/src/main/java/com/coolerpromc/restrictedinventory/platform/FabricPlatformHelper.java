@@ -1,7 +1,7 @@
 package com.coolerpromc.restrictedinventory.platform;
 
 import com.coolerpromc.restrictedinventory.FabricRestrictedInventory;
-import com.coolerpromc.restrictedinventory.config.util.ItemEntry;
+import com.coolerpromc.restrictedinventory.config.util.Restriction;
 import com.coolerpromc.restrictedinventory.network.ClientBoundAttachmentSyncPacket;
 import com.coolerpromc.restrictedinventory.platform.services.IPlatformHelper;
 import net.fabricmc.api.EnvType;
@@ -35,12 +35,12 @@ public class FabricPlatformHelper implements IPlatformHelper {
     }
 
     @Override
-    public Map<Integer, ItemEntry> getRestrictedSlots(Player player) {
+    public Map<Integer, Restriction> getRestrictedSlots(Player player) {
         return player.getAttachedOrCreate(FabricRestrictedInventory.RESTRICTED_SLOTS_ATTACHMENT);
     }
 
     @Override
-    public void setRestrictedSlots(Player player, Map<Integer, ItemEntry> restrictedSlots) {
+    public void setRestrictedSlots(Player player, Map<Integer, Restriction> restrictedSlots) {
         player.setAttached(FabricRestrictedInventory.RESTRICTED_SLOTS_ATTACHMENT, restrictedSlots);
         if (player instanceof ServerPlayer serverPlayer){
             Services.NETWORK.sendToPlayer(serverPlayer, new ClientBoundAttachmentSyncPacket(restrictedSlots));
@@ -48,7 +48,7 @@ public class FabricPlatformHelper implements IPlatformHelper {
     }
 
     @Override
-    public void syncRestrictedSlots(Map<Integer, ItemEntry> restrictedSlots) {
+    public void syncRestrictedSlots(Map<Integer, Restriction> restrictedSlots) {
         MinecraftServer server = FabricRestrictedInventory.MINECRAFT_SERVER;
         if (server != null){
             PlayerLookup.all(server).forEach(p -> setRestrictedSlots(p, restrictedSlots));

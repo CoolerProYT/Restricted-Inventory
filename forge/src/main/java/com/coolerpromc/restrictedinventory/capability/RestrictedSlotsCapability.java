@@ -1,16 +1,16 @@
 package com.coolerpromc.restrictedinventory.capability;
 
-import com.coolerpromc.restrictedinventory.config.util.ItemEntry;
+import com.coolerpromc.restrictedinventory.config.util.Restriction;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class RestrictedSlotsCapability implements IRestrictedSlots {
-    private Map<Integer, ItemEntry> slots = new HashMap<>();
+    private Map<Integer, Restriction> slots = new HashMap<>();
 
     @Override
-    public Map<Integer, ItemEntry> getRestrictedSlots() { return slots; }
+    public Map<Integer, Restriction> getRestrictedSlots() { return slots; }
 
     @Override
-    public void setRestrictedSlots(Map<Integer, ItemEntry> slots) { this.slots = slots; }
+    public void setRestrictedSlots(Map<Integer, Restriction> slots) { this.slots = slots; }
 }
