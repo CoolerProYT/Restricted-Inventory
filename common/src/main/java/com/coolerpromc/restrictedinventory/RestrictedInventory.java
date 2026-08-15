@@ -17,7 +17,7 @@ public class RestrictedInventory {
         }
         if (player instanceof ServerPlayer serverPlayer) {
             try {
-                Services.NETWORK.sendToPlayer(serverPlayer, new ClientBoundCommonConfigSyncPacket(CommonConfig.useClientRestriction()));
+                Services.NETWORK.sendToPlayer(serverPlayer, new ClientBoundCommonConfigSyncPacket(CommonConfig.useClientRestriction(), CommonConfig.getGroups()));
             } catch (Exception ignored) {}
         }
     }

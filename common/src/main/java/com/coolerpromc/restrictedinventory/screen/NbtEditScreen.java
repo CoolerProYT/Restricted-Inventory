@@ -43,7 +43,7 @@ public class NbtEditScreen extends Screen {
         this.entry = entry;
         this.registries = Minecraft.getInstance().level.registryAccess();
         this.previewItem = entry.items().stream().findFirst().orElse(null);
-        this.preview = previewItem == null ? ItemStack.EMPTY : entry.display(previewItem, registries);
+        this.preview = previewItem == null ? ItemStack.EMPTY : entry.stackOf(previewItem, registries);
         this.text = entry.components().map(components -> new SnbtPrinterTagVisitor().visit(components)).orElse("");
     }
 
@@ -73,7 +73,7 @@ public class NbtEditScreen extends Screen {
         Optional<CompoundTag> parsed = parse(text);
 
         this.saveButton.active = this.error == null;
-        this.preview = previewItem == null ? ItemStack.EMPTY : new ItemEntry(entry.item(), parsed).display(previewItem, registries);
+        this.preview = previewItem == null ? ItemStack.EMPTY : new ItemEntry(entry.item(), parsed).stackOf(previewItem, registries);
     }
 
     private Optional<CompoundTag> parse(String text) {

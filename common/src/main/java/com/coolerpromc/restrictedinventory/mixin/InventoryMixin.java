@@ -1,7 +1,7 @@
 package com.coolerpromc.restrictedinventory.mixin;
 
 import com.coolerpromc.restrictedinventory.config.CommonConfig;
-import com.coolerpromc.restrictedinventory.config.util.ItemEntry;
+import com.coolerpromc.restrictedinventory.config.util.Restriction;
 import com.coolerpromc.restrictedinventory.mixin.accessor.InventoryAccessor;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
@@ -22,7 +22,7 @@ public abstract class InventoryMixin {
     @Inject(method = "addResource(Lnet/minecraft/world/item/ItemStack;)I", at = @At("HEAD"), cancellable = true)
     private void onAddResource(ItemStack itemStack, CallbackInfoReturnable<Integer> cir) {
         Inventory self = (Inventory)(Object)this;
-        Map<Integer, ItemEntry> restricted = CommonConfig.restrictedSlots(self.player);
+        Map<Integer, Restriction> restricted = CommonConfig.restrictedSlots(self.player);
 
         int slot = restrictedInventory$findValidSlot(self, itemStack, restricted);
 
@@ -35,18 +35,18 @@ public abstract class InventoryMixin {
 
     @WrapOperation(method = "placeItemBackInInventory(Lnet/minecraft/world/item/ItemStack;Z)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Inventory;getSlotWithRemainingSpace(Lnet/minecraft/world/item/ItemStack;)I"))
     private int getSlotWithRemainingSpace(Inventory instance, ItemStack newItemStack, Operation<Integer> original){
-        Map<Integer, ItemEntry> restricted = CommonConfig.restrictedSlots(instance.player);
+        Map<Integer, Restriction> restricted = CommonConfig.restrictedSlots(instance.player);
         return restrictedInventory$findValidSlot(instance, newItemStack, restricted);
     }
 
     @WrapOperation(method = "placeItemBackInInventory(Lnet/minecraft/world/item/ItemStack;Z)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Inventory;getFreeSlot()I"))
     private int getFreeSlot(Inventory instance, Operation<Integer> original, @Local(argsOnly = true) ItemStack itemStack){
-        Map<Integer, ItemEntry> restricted = CommonConfig.restrictedSlots(instance.player);
+        Map<Integer, Restriction> restricted = CommonConfig.restrictedSlots(instance.player);
         return restrictedInventory$findValidSlot(instance, itemStack, restricted);
     }
 
     @Unique
-    private int restrictedInventory$findValidSlot(Inventory inv, ItemStack incoming, Map<Integer, ItemEntry> restricted) {
+    private int restrictedInventory$findValidSlot(Inventory inv, ItemStack incoming, Map<Integer, Restriction> restricted) {
         RegistryAccess registries = inv.player.registryAccess();
 
         for (int i = 0; i < 36; i++) {
@@ -57,7 +57,7 @@ public abstract class InventoryMixin {
             }
         }
 
-        for (Map.Entry<Integer, ItemEntry> entry : restricted.entrySet()) {
+        for (Map.Entry<Integer, Restriction> entry : restricted.entrySet()) {
             int slot = entry.getKey();
             if (!inv.getItem(slot).isEmpty()) continue;
             if (restrictedInventory$isSlotAllowed(slot, incoming, restricted, registries)) return slot;
@@ -72,7 +72,7 @@ public abstract class InventoryMixin {
     }
 
     @Unique
-    private boolean restrictedInventory$isSlotAllowed(int slot, ItemStack incoming, Map<Integer, ItemEntry> restricted, RegistryAccess registries) {
+    private boolean restrictedInventory$isSlotAllowed(int slot, ItemStack incoming, Map<Integer, Restriction> restricted, RegistryAccess registries) {
         if (!restricted.containsKey(slot)) return true;
 
         return restricted.get(slot).matches(incoming, registries);

@@ -1,7 +1,7 @@
 package com.coolerpromc.restrictedinventory;
 
 import com.coolerpromc.restrictedinventory.command.ModCommands;
-import com.coolerpromc.restrictedinventory.config.util.ItemEntry;
+import com.coolerpromc.restrictedinventory.config.util.Restriction;
 import com.coolerpromc.restrictedinventory.network.ClientBoundCommonConfigSyncPacket;
 import com.coolerpromc.restrictedinventory.network.ClientBoundNotifyUpdatePacket;
 import com.coolerpromc.restrictedinventory.network.ServerBoundClientRestrictedSlotsPacket;
@@ -24,12 +24,12 @@ import java.util.Map;
 
 public class FabricRestrictedInventory implements ModInitializer {
     public static MinecraftServer MINECRAFT_SERVER;
-    public static final AttachmentType<Map<Integer, ItemEntry>> RESTRICTED_SLOTS_ATTACHMENT =
+    public static final AttachmentType<Map<Integer, Restriction>> RESTRICTED_SLOTS_ATTACHMENT =
             AttachmentRegistry.create(Constants.id("restricted_slots_attachment"), b ->
                     b.copyOnDeath()
                             .initializer(Map::of)
-                            .syncWith(ByteBufCodecs.map(HashMap::new, ByteBufCodecs.INT, ItemEntry.STREAM_CODEC), AttachmentSyncPredicate.all())
-                            .persistent(Codec.unboundedMap(Codec.STRING.xmap(Integer::parseInt, Object::toString), ItemEntry.STORAGE_CODEC))
+                            .syncWith(ByteBufCodecs.map(HashMap::new, ByteBufCodecs.INT, Restriction.STREAM_CODEC), AttachmentSyncPredicate.all())
+                            .persistent(Codec.unboundedMap(Codec.STRING.xmap(Integer::parseInt, Object::toString), Restriction.CODEC))
             );
 
     @Override
