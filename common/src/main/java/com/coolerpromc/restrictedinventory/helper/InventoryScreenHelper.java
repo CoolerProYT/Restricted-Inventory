@@ -1,7 +1,7 @@
 package com.coolerpromc.restrictedinventory.helper;
 
 import com.coolerpromc.restrictedinventory.config.CommonConfig;
-import com.coolerpromc.restrictedinventory.config.util.ItemEntry;
+import com.coolerpromc.restrictedinventory.config.util.Restriction;
 import com.coolerpromc.restrictedinventory.mixin.accessor.AbstractContainerScreenAccessor;
 import com.coolerpromc.restrictedinventory.mixin.accessor.ScreenAccessor;
 import com.coolerpromc.restrictedinventory.platform.Services;
@@ -15,11 +15,9 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ArmorSlot;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
 import java.util.Map;
 
 public class InventoryScreenHelper {
@@ -39,19 +37,14 @@ public class InventoryScreenHelper {
         AbstractContainerScreenAccessor accessor = (AbstractContainerScreenAccessor) screen;
         Player player = Minecraft.getInstance().player;
 
-        for (Map.Entry<Integer, ItemEntry> restrictedSlot : CommonConfig.restrictedSlots(player).entrySet()) {
+        for (Map.Entry<Integer, Restriction> restrictedSlot : CommonConfig.restrictedSlots(player).entrySet()) {
             Slot slot = getSlotByInventoryIndex(screen.getMenu().slots, restrictedSlot.getKey());
             if (slot != null && slot.getItem().isEmpty()){
                 int x = slot.x + accessor.restrictedinventory$getLeftPos();
                 int y = slot.y + accessor.restrictedinventory$getTopPos();
 
-                ItemEntry value = CommonConfig.restrictedSlots(player).get(slot.getContainerSlot());
-                List<Item> items = value.items();
-
-                int size = items.size();
-                if (size > 0) {
-                    int index = (int) ((System.currentTimeMillis() / 1000) % size);
-                    ItemStack stack = value.display(items.get(index), player.registryAccess());
+                ItemStack stack = restrictedSlot.getValue().displayStack(player.registryAccess());
+                if (!stack.isEmpty()) {
                     if (stack.getItem() instanceof BlockItem){
                         GhostItemRenderer.render(graphics, stack, x, y, 0.3f);
                     }

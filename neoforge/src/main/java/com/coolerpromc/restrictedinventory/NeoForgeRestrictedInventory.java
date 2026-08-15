@@ -1,7 +1,7 @@
 package com.coolerpromc.restrictedinventory;
 
 import com.coolerpromc.restrictedinventory.command.ModCommands;
-import com.coolerpromc.restrictedinventory.config.util.ItemEntry;
+import com.coolerpromc.restrictedinventory.config.util.Restriction;
 import com.coolerpromc.restrictedinventory.network.*;
 import com.coolerpromc.restrictedinventory.platform.util.NeoForgePayloadContext;
 import com.mojang.serialization.Codec;
@@ -22,8 +22,8 @@ import java.util.function.Supplier;
 @Mod(Constants.MODID)
 public class NeoForgeRestrictedInventory {
     public static final DeferredRegister<AttachmentType<?>> ATTACHMENTS = DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, Constants.MODID);
-    public static final Supplier<AttachmentType<Map<Integer, ItemEntry>>> RESTRICTED_SLOTS_ATTACHMENT = ATTACHMENTS.register("restricted_slots_attachment", () -> AttachmentType.<Map<Integer, ItemEntry>>builder(Map::of).serialize(
-            Codec.unboundedMap(Codec.STRING.xmap(Integer::parseInt, Object::toString), ItemEntry.STORAGE_CODEC)).copyOnDeath().build());
+    public static final Supplier<AttachmentType<Map<Integer, Restriction>>> RESTRICTED_SLOTS_ATTACHMENT = ATTACHMENTS.register("restricted_slots_attachment", () -> AttachmentType.<Map<Integer, Restriction>>builder(Map::of).serialize(
+            Codec.unboundedMap(Codec.STRING.xmap(Integer::parseInt, Object::toString), Restriction.CODEC)).copyOnDeath().build());
 
     public NeoForgeRestrictedInventory(IEventBus eventBus) {
         RestrictedInventory.init();

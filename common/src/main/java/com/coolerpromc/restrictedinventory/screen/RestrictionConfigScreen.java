@@ -3,7 +3,10 @@ package com.coolerpromc.restrictedinventory.screen;
 import com.coolerpromc.restrictedinventory.Constants;
 import com.coolerpromc.restrictedinventory.config.ClientConfig;
 import com.coolerpromc.restrictedinventory.config.CommonConfig;
+import com.coolerpromc.restrictedinventory.config.util.GroupEntry;
 import com.coolerpromc.restrictedinventory.config.util.ItemEntry;
+import com.coolerpromc.restrictedinventory.config.util.Restriction;
+import com.coolerpromc.restrictedinventory.config.util.RestrictionGroups;
 import com.coolerpromc.restrictedinventory.network.ServerBoundRestrictionUpdatePacket;
 import com.coolerpromc.restrictedinventory.platform.Services;
 import com.coolerpromc.restrictedinventory.screen.widget.ScrollableItemListWidget;
@@ -43,7 +46,7 @@ public class RestrictionConfigScreen extends Screen {
     private static final ResourceLocation SLOT_HIGHLIGHT_FRONT_SPRITE = ResourceLocation.withDefaultNamespace("container/slot_highlight_front");
     public static final ResourceLocation TEXTURE = Constants.id("textures/gui/restriction_config.png");
 
-    private final Map<Integer, ItemEntry> restrictions = new HashMap<>(
+    private final Map<Integer, Restriction> restrictions = new HashMap<>(
             CommonConfig.clientCache.useClientRestriction()
                     ? ClientConfig.getRestrictedSlots()
                     : CommonConfig.clientCache.restrictedSlots()
@@ -230,10 +233,10 @@ public class RestrictionConfigScreen extends Screen {
     }
 
     private void onSave(Button button) {
-        Map<String, ItemEntry> newRestriction = this.restrictions.entrySet().stream().filter(e -> e.getValue() != null).collect(Collectors.toMap(e -> String.valueOf(e.getKey()), Map.Entry::getValue));
+        Map<String, Restriction> newRestriction = this.restrictions.entrySet().stream().filter(e -> e.getValue() != null).collect(Collectors.toMap(e -> String.valueOf(e.getKey()), Map.Entry::getValue));
 
         if (CommonConfig.clientCache.useClientRestriction()) {
-            ClientConfig.RESTRICTED_SLOTS.set(newRestriction.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().compact())));
+            ClientConfig.RESTRICTED_SLOTS.set(newRestriction);
             ClientConfig.CONFIG.save();
         } else {
             Services.NETWORK.sendToServer(new ServerBoundRestrictionUpdatePacket(newRestriction));
@@ -303,14 +306,26 @@ public class RestrictionConfigScreen extends Screen {
         }
     }
 
-    private static List<Component> describe(ItemEntry entry) {
+    private static List<Component> describe(Restriction restriction) {
         List<Component> lines = new ArrayList<>();
+
+        if (restriction instanceof GroupEntry group) {
+            lines.add(Component.literal(group.group().toString()));
+            RestrictionGroups.get(group.group()).ifPresentOrElse(
+                value -> lines.add(Component.literal(value.entries().size() + " entries").withStyle(ChatFormatting.DARK_GRAY)),
+                () -> lines.add(Component.literal("Unknown group").withStyle(ChatFormatting.RED))
+            );
+            return lines;
+        }
+
+        ItemEntry entry = (ItemEntry) restriction;
         lines.add(Component.literal(entry.item()));
         entry.components().ifPresent(tag -> {
             for (String line : new SnbtPrinterTagVisitor().visit(tag).split("\n")) {
                 lines.add(Component.literal(line).withStyle(ChatFormatting.DARK_GRAY));
             }
         });
+        entry.display().ifPresent(display -> lines.add(Component.literal("Display: " + display.item()).withStyle(ChatFormatting.DARK_GRAY)));
         lines.add(Component.literal("Middle click to edit components").withStyle(ChatFormatting.GRAY));
         return lines;
     }
@@ -337,9 +352,9 @@ public class RestrictionConfigScreen extends Screen {
         } else if (button == 2) {
             for (Map.Entry<Integer, RestrictionSlot> entry : slotByIndex.entrySet()) {
                 RestrictionSlot slot = entry.getValue();
-                if (slot.isHovering(mouseX, mouseY) && slot.entry() != null) {
+                if (slot.isHovering(mouseX, mouseY) && slot.entry() instanceof ItemEntry itemEntry) {
                     this.selectedSlot = entry.getKey();
-                    this.minecraft.setScreen(new NbtEditScreen(this, entry.getKey(), slot.entry()));
+                    this.minecraft.setScreen(new NbtEditScreen(this, entry.getKey(), itemEntry));
                     return true;
                 }
             }
@@ -351,19 +366,17 @@ public class RestrictionConfigScreen extends Screen {
      * Applies the component filter edited in {@link NbtEditScreen}, keeping the slot's item as it is.
      */
     public void applyComponents(int slot, Optional<CompoundTag> components) {
-        ItemEntry current = this.restrictions.get(slot);
-        if (current == null) return;
+        if (!(this.restrictions.get(slot) instanceof ItemEntry current)) return;
 
-        ItemEntry updated = new ItemEntry(current.item(), components);
+        ItemEntry updated = new ItemEntry(current.item(), components, current.display());
         this.restrictions.put(slot, updated);
         this.slotByIndex.put(slot, this.slotByIndex.get(slot).withEntry(updated));
     }
 
-    private static List<ItemStack> stacksOf(@Nullable ItemEntry entry) {
-        if (entry == null) return List.of();
+    private static List<ItemStack> stacksOf(@Nullable Restriction restriction) {
+        if (restriction == null) return List.of();
 
-        RegistryAccess registries = Minecraft.getInstance().level.registryAccess();
-        return entry.items().stream().map(item -> entry.display(item, registries)).toList();
+        return restriction.displayStacks(Minecraft.getInstance().level.registryAccess());
     }
 
     private List<TagKey<Item>> getAllItemTags() {
@@ -376,8 +389,8 @@ public class RestrictionConfigScreen extends Screen {
         return itemLookup.listTagIds().toList();
     }
 
-    public record RestrictionSlot(int x, int y, List<ItemStack> stacks, @Nullable ItemEntry entry) {
-        public RestrictionSlot(int x, int y, @Nullable ItemEntry entry) {
+    public record RestrictionSlot(int x, int y, List<ItemStack> stacks, @Nullable Restriction entry) {
+        public RestrictionSlot(int x, int y, @Nullable Restriction entry) {
             this(x, y, stacksOf(entry), entry);
         }
 
@@ -385,7 +398,7 @@ public class RestrictionConfigScreen extends Screen {
             return mouseX >= x - 1 && mouseX <= x + 16 && mouseY >= y - 1 && mouseY <= y + 16;
         }
 
-        public RestrictionSlot withEntry(@Nullable ItemEntry entry) {
+        public RestrictionSlot withEntry(@Nullable Restriction entry) {
             return new RestrictionSlot(x, y, entry);
         }
     }
