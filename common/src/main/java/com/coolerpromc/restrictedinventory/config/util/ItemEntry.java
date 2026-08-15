@@ -5,7 +5,6 @@ import com.mojang.datafixers.util.Either;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import io.netty.buffer.ByteBuf;
 import net.minecraft.core.Holder;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.component.DataComponentPatch;
@@ -14,10 +13,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
-import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
@@ -27,35 +23,41 @@ import net.minecraft.world.item.ItemStack;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 
-public final class ItemEntry {
-    public static final Codec<String> ITEM_ID_CODEC = Codec.STRING.validate(ItemEntry::validateId);
+public final class ItemEntry implements Restriction {
+    public static final Codec<ItemEntry> CODEC = RecordCodecBuilder.create(i -> i.group(
+        RestrictionCodecs.ITEM_OR_TAG_ID.fieldOf("item").forGetter(ItemEntry::item),
+        RestrictionCodecs.COMPONENTS_FIELD.forGetter(ItemEntry::components),
+        RestrictionCodecs.strictOptionalField(DisplayEntry.CODEC, "display").forGetter(ItemEntry::display)
+    ).apply(i, ItemEntry::new));
 
-    public static final Codec<ItemEntry> CODEC = RecordCodecBuilder.create(i -> i.group(ITEM_ID_CODEC.fieldOf("item").forGetter(ItemEntry::item), CompoundTag.CODEC.optionalFieldOf("components").forGetter(ItemEntry::components)).apply(i, ItemEntry::new));
-
-    public static final Codec<Map<String, Either<String, ItemEntry>>> CONFIG_CODEC = Codec.unboundedMap(Codec.STRING.validate(s -> s.matches("\\d+") && Integer.parseInt(s) >= 0 && Integer.parseInt(s) <= 35 ? DataResult.success(s) : DataResult.error(() -> "Index must between 0 and 35")), Codec.xor(ITEM_ID_CODEC, ItemEntry.CODEC));
-
-    public static final Codec<ItemEntry> STORAGE_CODEC = Codec.either(ITEM_ID_CODEC, CODEC).xmap(ItemEntry::of, ItemEntry::compact);
-
-    public static final StreamCodec<ByteBuf, ItemEntry> STREAM_CODEC = StreamCodec.composite(ByteBufCodecs.STRING_UTF8, ItemEntry::item, ByteBufCodecs.optional(ByteBufCodecs.COMPOUND_TAG), ItemEntry::components, ItemEntry::new);
+    public static final Codec<ItemEntry> ENTRY_CODEC = RestrictionCodecs.alternative(RestrictionCodecs.ITEM_OR_TAG_ID, CODEC).xmap(
+        value -> value.map(ItemEntry::new, Function.identity()),
+        entry -> entry.isPlainId() ? Either.left(entry.item()) : Either.right(entry)
+    );
 
     private final String item;
     private final Optional<CompoundTag> components;
+    private final Optional<DisplayEntry> display;
 
     private @Nullable DataComponentExactPredicate predicate;
     private @Nullable RegistryAccess predicateRegistries;
 
-    public ItemEntry(String item, Optional<CompoundTag> components) {
+    public ItemEntry(String item, Optional<CompoundTag> components, Optional<DisplayEntry> display) {
         this.item = item;
         this.components = components;
+        this.display = display;
+    }
+
+    public ItemEntry(String item, Optional<CompoundTag> components) {
+        this(item, components, Optional.empty());
     }
 
     public ItemEntry(String item) {
-        this(item, Optional.empty());
+        this(item, Optional.empty(), Optional.empty());
     }
 
     public String item() {
@@ -66,31 +68,13 @@ public final class ItemEntry {
         return components;
     }
 
-    private static DataResult<String> validateId(String value) {
-        String id = value.startsWith("#") ? value.substring(1) : value;
-        return Identifier.tryParse(id) != null ? DataResult.success(value) : DataResult.error(() -> "Not a valid item or tag id: " + value);
+    @Override
+    public Optional<DisplayEntry> display() {
+        return display;
     }
 
-    public static ItemEntry of(Either<String, ItemEntry> value) {
-        return value.map(ItemEntry::new, Function.identity());
-    }
-
-    public Either<String, ItemEntry> compact() {
-        return components.isEmpty() ? Either.left(item) : Either.right(this);
-    }
-
-    public static Optional<ItemEntry> read(@Nullable Tag tag) {
-        if (tag == null) return Optional.empty();
-
-        DataResult<ItemEntry> result = STORAGE_CODEC.parse(NbtOps.INSTANCE, tag);
-        result.error().ifPresent(error -> Constants.LOGGER.warn("Dropping unreadable restriction entry {}: {}", tag, error.message()));
-        return result.result();
-    }
-
-    public Tag serializeNbt() {
-        DataResult<Tag> result = STORAGE_CODEC.encodeStart(NbtOps.INSTANCE, this);
-        result.error().ifPresent(error -> Constants.LOGGER.warn("Could not write restriction entry for {}: {}", item, error.message()));
-        return result.result().orElseGet(() -> StringTag.valueOf(item));
+    public boolean isPlainId() {
+        return components.isEmpty() && display.isEmpty();
     }
 
     public boolean isTag() {
@@ -116,6 +100,7 @@ public final class ItemEntry {
         return BuiltInRegistries.ITEM.getOptional(id).<List<Item>>map(List::of).orElseGet(List::of);
     }
 
+    @Override
     public boolean matches(ItemStack stack, RegistryAccess registries) {
         Identifier id = id();
         if (id == null) return false;
@@ -127,6 +112,14 @@ public final class ItemEntry {
 
         DataComponentExactPredicate expected = predicate(registries);
         return expected != null && expected.test(stack);
+    }
+
+    @Override
+    public List<ItemStack> displayStacks(RegistryAccess registries) {
+        ItemStack pinned = display.map(entry -> entry.stack(registries)).orElse(ItemStack.EMPTY);
+        if (!pinned.isEmpty()) return List.of(pinned);
+
+        return items().stream().map(value -> stackOf(value, registries)).toList();
     }
 
     private @Nullable DataComponentExactPredicate predicate(RegistryAccess registries) {
@@ -150,7 +143,7 @@ public final class ItemEntry {
         return result.result().filter(CompoundTag.class::isInstance).map(CompoundTag.class::cast);
     }
 
-    public ItemStack display(Item item, RegistryAccess registries) {
+    public ItemStack stackOf(Item item, RegistryAccess registries) {
         ItemStack stack = new ItemStack(item);
 
         components.ifPresent(tag -> {
@@ -168,12 +161,12 @@ public final class ItemEntry {
 
     @Override
     public boolean equals(Object other) {
-        return other instanceof ItemEntry entry && item.equals(entry.item) && components.equals(entry.components);
+        return other instanceof ItemEntry entry && item.equals(entry.item) && components.equals(entry.components) && display.equals(entry.display);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(item, components);
+        return Objects.hash(item, components, display);
     }
 
     @Override
