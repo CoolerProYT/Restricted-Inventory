@@ -3,7 +3,9 @@ package com.coolerpromc.restrictedinventory.platform;
 import com.coolerpromc.restrictedinventory.capability.IRestrictedSlots;
 import com.coolerpromc.restrictedinventory.capability.ModCapabilities;
 import com.coolerpromc.restrictedinventory.config.util.Restriction;
+import com.coolerpromc.restrictedinventory.config.util.TargetedRestrictions;
 import com.coolerpromc.restrictedinventory.network.ClientBoundAttachmentSyncPacket;
+import com.coolerpromc.restrictedinventory.network.ClientBoundTargetedRestrictionsSyncPacket;
 import com.coolerpromc.restrictedinventory.platform.services.IPlatformHelper;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -54,6 +56,20 @@ public class ForgePlatformHelper implements IPlatformHelper {
     public void syncRestrictedSlots(Map<Integer, Restriction> restrictedSlots) {
         if (ServerLifecycleHooks.getCurrentServer() != null){
             ServerLifecycleHooks.getCurrentServer().getPlayerList().getPlayers().forEach(p -> setRestrictedSlots(p, restrictedSlots));
+        }
+    }
+
+    @Override
+    public TargetedRestrictions getTargetedRestrictions(Player player) {
+        return player.getCapability(ModCapabilities.RESTRICTED_SLOTS).map(IRestrictedSlots::getTargetedRestrictions).orElse(TargetedRestrictions.NONE);
+    }
+
+    @Override
+    public void setTargetedRestrictions(Player player, TargetedRestrictions targetedRestrictions) {
+        player.getCapability(ModCapabilities.RESTRICTED_SLOTS).ifPresent(cap -> cap.setTargetedRestrictions(targetedRestrictions));
+
+        if (player instanceof ServerPlayer serverPlayer){
+            Services.NETWORK.sendToPlayer(serverPlayer, new ClientBoundTargetedRestrictionsSyncPacket(targetedRestrictions));
         }
     }
 

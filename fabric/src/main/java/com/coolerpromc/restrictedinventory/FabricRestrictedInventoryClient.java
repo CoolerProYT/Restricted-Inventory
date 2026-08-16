@@ -5,6 +5,7 @@ import com.coolerpromc.restrictedinventory.config.ClientConfig;
 import com.coolerpromc.restrictedinventory.network.ClientBoundAttachmentSyncPacket;
 import com.coolerpromc.restrictedinventory.network.ClientBoundCommonConfigSyncPacket;
 import com.coolerpromc.restrictedinventory.network.ClientBoundNotifyUpdatePacket;
+import com.coolerpromc.restrictedinventory.network.ClientBoundTargetedRestrictionsSyncPacket;
 import com.coolerpromc.restrictedinventory.network.ServerBoundClientRestrictedSlotsPacket;
 import com.coolerpromc.restrictedinventory.platform.Services;
 import com.coolerpromc.restrictedinventory.platform.util.FabricClientPayloadContext;
@@ -23,6 +24,7 @@ public class FabricRestrictedInventoryClient implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(ClientBoundNotifyUpdatePacket.TYPE, (client, handler, buf, sender) -> ClientBoundNotifyUpdatePacket.decode(buf).handle(new FabricClientPayloadContext(client, handler)));
         ClientPlayNetworking.registerGlobalReceiver(ClientBoundAttachmentSyncPacket.TYPE, (client, handler, buf, sender) -> ClientBoundAttachmentSyncPacket.decode(buf).handle(new FabricClientPayloadContext(client, handler)));
         ClientPlayNetworking.registerGlobalReceiver(ClientBoundCommonConfigSyncPacket.TYPE, (client, handler, buf, sender) -> ClientBoundCommonConfigSyncPacket.decode(buf).handle(new FabricClientPayloadContext(client, handler)));
+        ClientPlayNetworking.registerGlobalReceiver(ClientBoundTargetedRestrictionsSyncPacket.TYPE, (client, handler, buf, sender) -> ClientBoundTargetedRestrictionsSyncPacket.decode(buf).handle(new FabricClientPayloadContext(client, handler)));
 
         ClientPlayConnectionEvents.JOIN.register((listener, sender, client) -> {
             Services.NETWORK.sendToServer(new ServerBoundClientRestrictedSlotsPacket(ClientConfig.getRestrictedSlots()));

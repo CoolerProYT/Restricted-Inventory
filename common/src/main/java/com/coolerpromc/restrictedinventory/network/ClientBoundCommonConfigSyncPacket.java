@@ -4,6 +4,7 @@ import com.coolerpromc.restrictedinventory.Constants;
 import com.coolerpromc.restrictedinventory.config.CommonConfig;
 import com.coolerpromc.restrictedinventory.config.util.RestrictionGroup;
 import com.coolerpromc.restrictedinventory.config.util.RestrictionGroups;
+import com.coolerpromc.restrictedinventory.platform.Services;
 import com.coolerpromc.restrictedinventory.platform.util.PayloadContext;
 import com.mojang.serialization.Codec;
 import net.minecraft.network.FriendlyByteBuf;
@@ -36,7 +37,7 @@ public record ClientBoundCommonConfigSyncPacket(boolean useClientRestriction, Ma
     public void handle(PayloadContext context){
         context.execute(() -> {
             RestrictionGroups.setRemote(groups);
-            CommonConfig.clientCache = new CommonConfig.ClientCache(useClientRestriction, CommonConfig.restrictedSlots(context.player()));
+            CommonConfig.clientCache = new CommonConfig.ClientCache(useClientRestriction, Services.PLATFORM.getRestrictedSlots(context.player()));
         });
     }
 }
