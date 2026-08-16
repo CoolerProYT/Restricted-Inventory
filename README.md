@@ -9,6 +9,7 @@ A Minecraft mod that lets you lock specific player inventory slots to only accep
 - Visual overlay on restricted slots showing what item is required (cycles through tag members for tag-based restrictions)
 - Pin the slot icon to one exact item variant with `display`, without changing what the slot accepts
 - Group several entries — including component-specific ones — under one name and restrict a slot to the whole group
+- Optionally give different players different rules through their vanilla scoreboard team or vanilla entity tags (opt-in, off by default)
 - Hold **Tab** in any inventory screen to display slot indices — useful when setting up your config
 
 ## How It Works
@@ -60,8 +61,11 @@ Applies to the server. Controls all players unless `useClientRestriction` is ena
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `useClientRestriction` | boolean | `false` | When `true`, each player's restrictions come from their own client config instead of this file |
+| `useTeamAndTagRestrictions` | boolean | `false` | When `true`, `teamRestrictions` and `tagRestrictions` are read and can target individual players |
 | `restrictedSlots` | object | `{}` | Map of slot index → item ID, tag, or restriction entry |
 | `groups` | object | `{}` | Map of group name → list of entries a slot can be restricted to as a whole |
+| `teamRestrictions` | object | `{}` | Map of vanilla scoreboard team name → restriction profile |
+| `tagRestrictions` | object | `{}` | Map of vanilla entity tag → restriction profile |
 
 Groups live in the common config only and are synced to every connecting client, so a group id means
 the same thing on both sides even when `useClientRestriction` is enabled.
@@ -170,6 +174,103 @@ item when **any** entry in the group matches:
 datapack item tag such as `#restrictedinventory:handguns` is still the better tool and keeps working
 unchanged. Reach for a RestrictedInventory group when the members differ only by their data
 components, which an item tag cannot express.
+
+### Team and Tag Restrictions
+
+Different players can be given different restrictions based on the vanilla scoreboard team they are
+on and the vanilla entity tags they carry. The feature is **off by default**:
+
+```json
+{
+  "useTeamAndTagRestrictions": false
+}
+```
+
+- While it is `false`, nothing changes: no team is looked up, no tag is looked up, and every player
+  keeps using the behaviour described above.
+- While it is `true`, a player who matches a configured team or tag rule uses **that** set instead of
+  `restrictedSlots`. A player who matches nothing falls back to `restrictedSlots` as before.
+
+The global `restrictedSlots` is a fallback, **not** a base layer: once any team or tag rule matches, the
+global slots are not part of the result at all.
+
+```json
+{
+  "useTeamAndTagRestrictions": true,
+  "restrictedSlots": {
+    "9": "minecraft:bread"
+  },
+  "teamRestrictions": {
+    "prisoners": {
+      "restrictedSlots": {
+        "9": "minecraft:barrier",
+        "10": "minecraft:barrier"
+      }
+    },
+    "guards": {
+      "restrictedSlots": {
+        "9": "minecraft:iron_sword",
+        "10": "minecraft:shield"
+      }
+    }
+  },
+  "tagRestrictions": {
+    "no_weapons": {
+      "restrictedSlots": {
+        "0": "minecraft:barrier",
+        "1": "minecraft:barrier"
+      }
+    }
+  }
+}
+```
+
+Membership is managed entirely with vanilla commands — RestrictedInventory only reads the result and
+adds no commands of its own:
+
+```
+/team add prisoners
+/team join prisoners Steve
+```
+
+```
+/tag Steve add no_weapons
+/tag Steve remove no_weapons
+```
+
+Changes take effect immediately; the server re-reads each player's team and tags every tick, so a
+`/team join` or `/tag remove` is reflected without a relog or a config reload. Nothing is copied into
+the player's saved data — the rules stay attached to the team or tag, never to the player.
+
+#### How the pieces combine
+
+- A vanilla player is on **at most one** team, so at most one team rule can apply.
+- A player can have **many** tags, and every matching tag rule is applied.
+- Tags a player has that RestrictedInventory has no rule for are ignored — an unrelated `afk` tag from
+  another mod never causes the global restrictions to be dropped.
+- When several sources claim the same slot, the winner is:
+
+  ```
+  player's own restrictions  >  tag  >  team  >  global fallback
+  ```
+
+  So a `special_weapon` tag putting `minecraft:diamond_sword` in slot 9 overrides a `prisoners` team
+  rule putting `minecraft:barrier` there.
+- When two matching **tags** claim the same slot, the tag names are sorted alphabetically and applied
+  in that order, so the later name wins. The same player with the same tags and the same config always
+  resolves to the same result, no matter what order the game stores their tags in.
+- "The player's own restrictions" only exist in per-client mode (`useClientRestriction: true`), where
+  each player supplies their own set; those entries stay the most specific layer and are laid over the
+  team/tag result. With `useClientRestriction: false` every player shares one config, so a matching
+  team/tag rule simply replaces it.
+- A profile with an empty `restrictedSlots` still counts as a match, which is the way to give a team or
+  tag *no* restrictions at all while everyone else keeps the global ones.
+
+Configured teams and tags do not have to exist. A `boss_fight` team rule is valid before anybody has
+run `/team add boss_fight`; it simply starts applying once a player joins a team with that name.
+
+Resolution happens on the server, which stays authoritative — the client is told what applies to it
+through the same channel that already carries restrictions, and never inspects teams or tags itself.
 
 ## Compatibility
 
