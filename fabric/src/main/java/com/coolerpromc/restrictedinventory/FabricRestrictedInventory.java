@@ -2,6 +2,7 @@ package com.coolerpromc.restrictedinventory;
 
 import com.coolerpromc.restrictedinventory.command.ModCommands;
 import com.coolerpromc.restrictedinventory.config.util.Restriction;
+import com.coolerpromc.restrictedinventory.config.util.TargetedRestrictions;
 import com.coolerpromc.restrictedinventory.network.ClientBoundCommonConfigSyncPacket;
 import com.coolerpromc.restrictedinventory.network.ClientBoundNotifyUpdatePacket;
 import com.coolerpromc.restrictedinventory.network.ServerBoundClientRestrictedSlotsPacket;
@@ -14,6 +15,7 @@ import net.fabricmc.fabric.api.attachment.v1.AttachmentSyncPredicate;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -32,12 +34,19 @@ public class FabricRestrictedInventory implements ModInitializer {
                             .persistent(Codec.unboundedMap(Codec.STRING.xmap(Integer::parseInt, Object::toString), Restriction.CODEC))
             );
 
+    public static final AttachmentType<TargetedRestrictions> TARGETED_RESTRICTIONS_ATTACHMENT =
+            AttachmentRegistry.create(Constants.id("targeted_restrictions_attachment"), b ->
+                    b.initializer(() -> TargetedRestrictions.NONE)
+                            .syncWith(TargetedRestrictions.STREAM_CODEC, AttachmentSyncPredicate.all())
+            );
+
     @Override
     public void onInitialize() {
         RestrictedInventory.init();
 
         ServerLifecycleEvents.SERVER_STARTING.register(server -> MINECRAFT_SERVER = server);
         ServerLifecycleEvents.SYNC_DATA_PACK_CONTENTS.register((p, b) -> RestrictedInventory.syncCommonRestrictedInventory(p));
+        ServerTickEvents.END_SERVER_TICK.register(RestrictedInventory::refreshTargetedRestrictions);
 
         PayloadTypeRegistry.serverboundPlay().register(ServerBoundClientRestrictedSlotsPacket.TYPE, ServerBoundClientRestrictedSlotsPacket.STREAM_CODEC);
         PayloadTypeRegistry.serverboundPlay().register(ServerBoundRestrictionUpdatePacket.TYPE, ServerBoundRestrictionUpdatePacket.STREAM_CODEC);

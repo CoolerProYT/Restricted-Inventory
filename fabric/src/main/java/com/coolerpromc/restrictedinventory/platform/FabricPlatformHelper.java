@@ -2,6 +2,7 @@ package com.coolerpromc.restrictedinventory.platform;
 
 import com.coolerpromc.restrictedinventory.FabricRestrictedInventory;
 import com.coolerpromc.restrictedinventory.config.util.Restriction;
+import com.coolerpromc.restrictedinventory.config.util.TargetedRestrictions;
 import com.coolerpromc.restrictedinventory.platform.services.IPlatformHelper;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
@@ -48,6 +49,16 @@ public class FabricPlatformHelper implements IPlatformHelper {
         if (server != null){
             PlayerLookup.all(server).forEach(p -> setRestrictedSlots(p, restrictedSlots));
         }
+    }
+
+    @Override
+    public TargetedRestrictions getTargetedRestrictions(Player player) {
+        return player.getAttachedOrCreate(FabricRestrictedInventory.TARGETED_RESTRICTIONS_ATTACHMENT);
+    }
+
+    @Override
+    public void setTargetedRestrictions(Player player, TargetedRestrictions targetedRestrictions) {
+        player.setAttached(FabricRestrictedInventory.TARGETED_RESTRICTIONS_ATTACHMENT, targetedRestrictions);
     }
 
     @Override

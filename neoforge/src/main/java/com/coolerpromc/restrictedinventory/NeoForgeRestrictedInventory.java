@@ -2,6 +2,7 @@ package com.coolerpromc.restrictedinventory;
 
 import com.coolerpromc.restrictedinventory.command.ModCommands;
 import com.coolerpromc.restrictedinventory.config.util.Restriction;
+import com.coolerpromc.restrictedinventory.config.util.TargetedRestrictions;
 import com.coolerpromc.restrictedinventory.network.ClientBoundCommonConfigSyncPacket;
 import com.coolerpromc.restrictedinventory.network.ClientBoundNotifyUpdatePacket;
 import com.coolerpromc.restrictedinventory.network.ServerBoundClientRestrictedSlotsPacket;
@@ -16,6 +17,7 @@ import net.neoforged.neoforge.attachment.AttachmentType;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.OnDatapackSyncEvent;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -31,17 +33,25 @@ public class NeoForgeRestrictedInventory {
     public static final Supplier<AttachmentType<Map<Integer, Restriction>>> RESTRICTED_SLOTS_ATTACHMENT = ATTACHMENTS.register("restricted_slots_attachment", () -> AttachmentType.<Map<Integer, Restriction>>builder(Map::of).serialize(
             Codec.unboundedMap(Codec.STRING.xmap(Integer::parseInt, Object::toString), Restriction.CODEC).fieldOf("restricted_slots")).sync(ByteBufCodecs.map(HashMap::new, ByteBufCodecs.INT, Restriction.STREAM_CODEC)).copyOnDeath().build());
 
+    public static final Supplier<AttachmentType<TargetedRestrictions>> TARGETED_RESTRICTIONS_ATTACHMENT = ATTACHMENTS.register("targeted_restrictions_attachment",
+            () -> AttachmentType.builder(() -> TargetedRestrictions.NONE).sync(TargetedRestrictions.STREAM_CODEC).build());
+
     public NeoForgeRestrictedInventory(IEventBus eventBus) {
         RestrictedInventory.init();
 
         ATTACHMENTS.register(eventBus);
         NeoForge.EVENT_BUS.addListener(this::onDatapackSync);
         NeoForge.EVENT_BUS.addListener(this::onRegisterCommands);
+        NeoForge.EVENT_BUS.addListener(this::onServerTick);
         eventBus.addListener(this::onRegisterPayloadHandlers);
     }
 
     public void onDatapackSync(OnDatapackSyncEvent event) {
         RestrictedInventory.syncCommonRestrictedInventory(event.getPlayer());
+    }
+
+    public void onServerTick(ServerTickEvent.Post event) {
+        RestrictedInventory.refreshTargetedRestrictions(event.getServer());
     }
 
     public void onRegisterPayloadHandlers(RegisterPayloadHandlersEvent event) {
