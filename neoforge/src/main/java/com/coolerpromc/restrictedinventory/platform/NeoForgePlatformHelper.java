@@ -2,6 +2,7 @@ package com.coolerpromc.restrictedinventory.platform;
 
 import com.coolerpromc.restrictedinventory.NeoForgeRestrictedInventory;
 import com.coolerpromc.restrictedinventory.config.util.Restriction;
+import com.coolerpromc.restrictedinventory.config.util.TargetedRestrictions;
 import com.coolerpromc.restrictedinventory.platform.services.IPlatformHelper;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -49,6 +50,16 @@ public class NeoForgePlatformHelper implements IPlatformHelper {
         if (ServerLifecycleHooks.getCurrentServer() != null){
             ServerLifecycleHooks.getCurrentServer().getPlayerList().getPlayers().forEach(p -> setRestrictedSlots(p, restrictedSlots));
         }
+    }
+
+    @Override
+    public TargetedRestrictions getTargetedRestrictions(Player player) {
+        return player.getData(NeoForgeRestrictedInventory.TARGETED_RESTRICTIONS_ATTACHMENT);
+    }
+
+    @Override
+    public void setTargetedRestrictions(Player player, TargetedRestrictions targetedRestrictions) {
+        player.setData(NeoForgeRestrictedInventory.TARGETED_RESTRICTIONS_ATTACHMENT, targetedRestrictions);
     }
 
     @Override

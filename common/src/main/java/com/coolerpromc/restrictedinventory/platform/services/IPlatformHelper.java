@@ -1,6 +1,7 @@
 package com.coolerpromc.restrictedinventory.platform.services;
 
 import com.coolerpromc.restrictedinventory.config.util.Restriction;
+import com.coolerpromc.restrictedinventory.config.util.TargetedRestrictions;
 import net.minecraft.world.entity.player.Player;
 
 import java.util.Map;
@@ -16,5 +17,7 @@ public interface IPlatformHelper {
     Map<Integer, Restriction> getRestrictedSlots(Player player);
     void setRestrictedSlots(Player player, Map<Integer, Restriction> restrictedSlots);
     void syncRestrictedSlots(Map<Integer, Restriction> restrictedSlots);
+    TargetedRestrictions getTargetedRestrictions(Player player);
+    void setTargetedRestrictions(Player player, TargetedRestrictions targetedRestrictions);
     void updatePlayersPermission();
 }
