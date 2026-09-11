@@ -6,11 +6,11 @@ plugins {
 
 repositories {
     maven {
-        name = "Maven for PR #3198" // https://github.com/neoforged/NeoForge/pull/3198
-        url = uri("https://prmaven.neoforged.net/NeoForge/pr3198")
-        content {
-            includeModule("net.neoforged", "neoforge")
-            includeModule("net.neoforged", "testframework")
+        name "coolerpromcMavenPrivate"
+        url "https://maven.coolerpromc.com/private"
+        credentials {
+            username = findProperty("maven_username")
+            password = findProperty("maven_password")
         }
     }
 }
@@ -57,7 +57,7 @@ neoForge {
 }
 
 dependencies {
-    jarJar implementation("com.coolerpromc.coolerconfig:coolerconfig-neoforge-${dependencies_minecraft_version}:${cooler_config_version}")
+    jarJar implementation("com.coolerpromc.coolerconfig:coolerconfig-neoforge-${minecraft_version}:${cooler_config_version}")
 }
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }

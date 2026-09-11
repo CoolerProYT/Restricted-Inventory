@@ -33,13 +33,13 @@ public abstract class InventoryMixin {
         }
     }
 
-    @WrapOperation(method = "placeItemBackInInventory(Lnet/minecraft/world/item/ItemStack;Z)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Inventory;getSlotWithRemainingSpace(Lnet/minecraft/world/item/ItemStack;)I"))
+    @WrapOperation(method = "placeItemBackInInventory(Lnet/minecraft/world/item/ItemStack;ZLnet/minecraft/util/Prediction;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Inventory;getSlotWithRemainingSpace(Lnet/minecraft/world/item/ItemStack;)I"))
     private int getSlotWithRemainingSpace(Inventory instance, ItemStack newItemStack, Operation<Integer> original){
         Map<Integer, Restriction> restricted = CommonConfig.restrictedSlots(instance.player);
         return restrictedInventory$findValidSlot(instance, newItemStack, restricted);
     }
 
-    @WrapOperation(method = "placeItemBackInInventory(Lnet/minecraft/world/item/ItemStack;Z)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Inventory;getFreeSlot()I"))
+    @WrapOperation(method = "placeItemBackInInventory(Lnet/minecraft/world/item/ItemStack;ZLnet/minecraft/util/Prediction;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Inventory;getFreeSlot()I"))
     private int getFreeSlot(Inventory instance, Operation<Integer> original, @Local(argsOnly = true) ItemStack itemStack){
         Map<Integer, Restriction> restricted = CommonConfig.restrictedSlots(instance.player);
         return restrictedInventory$findValidSlot(instance, itemStack, restricted);
