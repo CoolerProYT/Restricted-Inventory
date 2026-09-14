@@ -4,6 +4,7 @@
   "package": "com.coolerpromc.restrictedinventory.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "AbstractContainerMenuMixin",
     "InventoryMixin",
     "SlotMixin",
     "accessor.InventoryAccessor"

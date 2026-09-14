@@ -23,6 +23,16 @@ public class SlotHelper {
         return true;
     }
 
+    public static boolean isDesignatedSlot(Slot slot, ItemStack stack) {
+        if (!isModifiableSlot(slot)) return false;
+
+        Inventory inventory = (Inventory) slot.container;
+        Player player = inventory.player;
+        Restriction restriction = CommonConfig.restrictedSlots(player).get(slot.getContainerSlot());
+
+        return restriction != null && restriction.matches(stack, player.registryAccess());
+    }
+
     private static boolean isModifiableSlot(Slot slot) {
         return slot.container instanceof Inventory && !(slot instanceof ArmorSlot) && slot.getContainerSlot() >= 0 && slot.getContainerSlot() <= 35;
     }
