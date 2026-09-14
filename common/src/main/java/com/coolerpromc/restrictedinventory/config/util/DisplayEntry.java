@@ -12,7 +12,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.RegistryOps;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.Optional;
@@ -34,7 +34,7 @@ public record DisplayEntry(String item, Optional<CompoundTag> components) {
     }
 
     public ItemStack stack(RegistryAccess registries) {
-        ResourceLocation id = ResourceLocation.tryParse(item);
+        Identifier id = Identifier.tryParse(item);
         if (id == null) return ItemStack.EMPTY;
 
         return BuiltInRegistries.ITEM.getOptional(id).map(value -> {

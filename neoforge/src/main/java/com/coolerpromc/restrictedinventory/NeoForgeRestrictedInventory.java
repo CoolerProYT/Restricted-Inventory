@@ -25,7 +25,7 @@ import java.util.function.Supplier;
 public class NeoForgeRestrictedInventory {
     public static final DeferredRegister<AttachmentType<?>> ATTACHMENTS = DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, Constants.MODID);
     public static final Supplier<AttachmentType<Map<Integer, Restriction>>> RESTRICTED_SLOTS_ATTACHMENT = ATTACHMENTS.register("restricted_slots_attachment", () -> AttachmentType.<Map<Integer, Restriction>>builder(Map::of).serialize(
-            Codec.unboundedMap(Codec.STRING.xmap(Integer::parseInt, Object::toString), Restriction.CODEC)).copyOnDeath().build());
+            Codec.unboundedMap(Codec.STRING.xmap(Integer::parseInt, Object::toString), Restriction.CODEC).fieldOf("value")).copyOnDeath().build());
 
     // Resolved from live team/tag state every tick, so it is never written to disk. This NeoForge
     // version has no attachment sync, so the value reaches the client through

@@ -10,6 +10,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.server.permissions.Permissions;
 
 public class ModClientCommands {
     public static <T extends SharedSuggestionProvider> void register(CommandDispatcher<T> dispatcher){
@@ -18,7 +19,7 @@ public class ModClientCommands {
     }
 
     private static <T extends SharedSuggestionProvider> boolean canConfig(T commandSourceStack) {
-        return CommonConfig.clientCache.useClientRestriction() || commandSourceStack.hasPermission(4);
+        return CommonConfig.clientCache.useClientRestriction() || commandSourceStack.permissions().hasPermission(Permissions.COMMANDS_OWNER);
     }
 
     private static <T extends SharedSuggestionProvider> int config(CommandContext<T> context) {

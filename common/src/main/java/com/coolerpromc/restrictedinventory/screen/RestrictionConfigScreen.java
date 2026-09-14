@@ -18,8 +18,9 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.SpriteIconButton;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -27,7 +28,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.SnbtPrinterTagVisitor;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
@@ -42,9 +43,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class RestrictionConfigScreen extends Screen {
-    private static final ResourceLocation SLOT_HIGHLIGHT_BACK_SPRITE = ResourceLocation.withDefaultNamespace("container/slot_highlight_back");
-    private static final ResourceLocation SLOT_HIGHLIGHT_FRONT_SPRITE = ResourceLocation.withDefaultNamespace("container/slot_highlight_front");
-    public static final ResourceLocation TEXTURE = Constants.id("textures/gui/restriction_config.png");
+    private static final Identifier SLOT_HIGHLIGHT_BACK_SPRITE = Identifier.withDefaultNamespace("container/slot_highlight_back");
+    private static final Identifier SLOT_HIGHLIGHT_FRONT_SPRITE = Identifier.withDefaultNamespace("container/slot_highlight_front");
+    public static final Identifier TEXTURE = Constants.id("textures/gui/restriction_config.png");
 
     private final Map<Integer, Restriction> restrictions = new HashMap<>(
             CommonConfig.clientCache.useClientRestriction()
@@ -82,7 +83,7 @@ public class RestrictionConfigScreen extends Screen {
         this.initSlots();
 
         List<ItemStack> displayItems = this.choices.stream().map(ItemChoice::stack).toList();
-        List<TagKey<Item>> displayTags = this.itemTags.stream().filter(key -> BuiltInRegistries.ITEM.getOrCreateTag(key).size() > 0).toList();
+        List<TagKey<Item>> displayTags = this.itemTags.stream().filter(RestrictionConfigScreen::tagHasEntries).toList();
         this.itemListWidget = addRenderableWidget(new ScrollableItemListWidget(x + 8, y + 24 + 8, bgWidth - 16, 70, displayItems, displayTags, this::onItemSelected));
 
         int buttonWidth = this.bgWidth / 3;
@@ -116,7 +117,7 @@ public class RestrictionConfigScreen extends Screen {
             String nameQuery = spaceIdx >= 0 ? rest.substring(spaceIdx + 1).trim() : "";
 
             List<ItemStack> displayItems = this.choices.stream().filter(choice -> choice.namespace().startsWith(nsPrefix)).filter(choice -> nameQuery.isEmpty() || wordStartMatch(choice.searchText(), nameQuery)).map(ItemChoice::stack).toList();
-            List<TagKey<Item>> displayTags = this.itemTags.stream().filter(key -> BuiltInRegistries.ITEM.getTag(key).map(h -> h.size() > 0).orElse(false)).filter(key -> tagNamespaceMatch(key, nsPrefix, nameQuery)).toList();
+            List<TagKey<Item>> displayTags = this.itemTags.stream().filter(RestrictionConfigScreen::tagHasEntries).filter(key -> tagNamespaceMatch(key, nsPrefix, nameQuery)).toList();
 
             itemListWidget.setItems(displayItems);
             itemListWidget.setTags(displayTags);
@@ -124,10 +125,14 @@ public class RestrictionConfigScreen extends Screen {
         }
 
         List<ItemStack> displayItems = this.choices.stream().filter(choice -> wordStartMatch(choice.searchText(), query)).map(ItemChoice::stack).toList();
-        List<TagKey<Item>> displayTags = this.itemTags.stream().filter(key -> BuiltInRegistries.ITEM.getTag(key).map(h -> h.size() > 0).orElse(false)).filter(key -> tagMatch(key, query)).toList();
+        List<TagKey<Item>> displayTags = this.itemTags.stream().filter(RestrictionConfigScreen::tagHasEntries).filter(key -> tagMatch(key, query)).toList();
 
         itemListWidget.setItems(displayItems);
         itemListWidget.setTags(displayTags);
+    }
+
+    private static boolean tagHasEntries(TagKey<Item> key) {
+        return BuiltInRegistries.ITEM.getTagOrEmpty(key).iterator().hasNext();
     }
 
     private boolean tagNamespaceMatch(TagKey<Item> key, String nsPrefix, String nameQuery) {
@@ -203,7 +208,7 @@ public class RestrictionConfigScreen extends Screen {
     }
 
     private static ItemChoice toChoice(ItemStack stack) {
-        ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
+        Identifier id = BuiltInRegistries.ITEM.getKey(stack.getItem());
         StringBuilder searchText = new StringBuilder(stack.getHoverName().getString());
         searchText.append(' ').append(id.getPath().replace("_", " "));
 
@@ -264,7 +269,7 @@ public class RestrictionConfigScreen extends Screen {
     @Override
     public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float a) {
         super.renderBackground(graphics, mouseX, mouseY, a);
-        graphics.blit(TEXTURE, x, y, 0, 0, bgWidth, bgHeight, 256, 256);
+        graphics.blit(RenderPipelines.GUI_TEXTURED, TEXTURE, x, y, 0, 0, bgWidth, bgHeight, 256, 256);
     }
 
     @Override
@@ -281,7 +286,7 @@ public class RestrictionConfigScreen extends Screen {
             RestrictionSlot slot = entry.getValue();
 
             if (slot.isHovering(mouseX, mouseY) && index != this.selectedSlot) {
-                AbstractContainerScreen.renderSlotHighlight(graphics, slot.x, slot.y, 0);
+                renderSlotHighlight(graphics, slot.x, slot.y);
             }
             if (index == this.selectedSlot) {
                 int fillX = slot.x;
@@ -301,9 +306,14 @@ public class RestrictionConfigScreen extends Screen {
     private void extractTooltip(GuiGraphics graphics, int mouseX, int mouseY) {
         for (RestrictionSlot slot : slotByIndex.values()) {
             if (slot.isHovering(mouseX, mouseY) && slot.entry != null) {
-                graphics.renderComponentTooltip(this.font, describe(slot.entry), mouseX, mouseY);
+                graphics.setComponentTooltipForNextFrame(this.font, describe(slot.entry), mouseX, mouseY);
             }
         }
+    }
+
+    private static void renderSlotHighlight(GuiGraphics graphics, int x, int y) {
+        int color = -2130706433;
+        graphics.fillGradient(x, y, x + 16, y + 16, color, color);
     }
 
     private static List<Component> describe(Restriction restriction) {
@@ -331,8 +341,11 @@ public class RestrictionConfigScreen extends Screen {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (button == 0) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+
+        if (event.button() == 0) {
             for (Map.Entry<Integer, RestrictionSlot> entry : slotByIndex.entrySet()) {
                 RestrictionSlot slot = entry.getValue();
                 if (slot.isHovering(mouseX, mouseY)) {
@@ -340,7 +353,7 @@ public class RestrictionConfigScreen extends Screen {
                     return true;
                 }
             }
-        } else if (button == 1) {
+        } else if (event.button() == 1) {
             for (Map.Entry<Integer, RestrictionSlot> entry : slotByIndex.entrySet()) {
                 RestrictionSlot slot = entry.getValue();
                 if (slot.isHovering(mouseX, mouseY)) {
@@ -349,7 +362,7 @@ public class RestrictionConfigScreen extends Screen {
                     return true;
                 }
             }
-        } else if (button == 2) {
+        } else if (event.button() == 2) {
             for (Map.Entry<Integer, RestrictionSlot> entry : slotByIndex.entrySet()) {
                 RestrictionSlot slot = entry.getValue();
                 if (slot.isHovering(mouseX, mouseY) && slot.entry() instanceof ItemEntry itemEntry) {
@@ -359,7 +372,7 @@ public class RestrictionConfigScreen extends Screen {
                 }
             }
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, doubleClick);
     }
 
     /**

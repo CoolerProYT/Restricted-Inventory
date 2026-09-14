@@ -1,7 +1,6 @@
 package com.coolerpromc.restrictedinventory.screen;
 
 import com.coolerpromc.restrictedinventory.config.util.ItemEntry;
-import com.coolerpromc.restrictedinventory.screen.widget.NbtEditBox;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
@@ -55,7 +54,11 @@ public class NbtEditScreen extends Screen {
         int editorX = (this.width - EDITOR_WIDTH) / 2;
         int editorY = 60;
 
-        this.editor = addRenderableWidget(new NbtEditBox(this.font, editorX, editorY, EDITOR_WIDTH, EDITOR_HEIGHT, Component.literal("{}"), Component.literal("Components")));
+        this.editor = addRenderableWidget(MultiLineEditBox.builder()
+                .setX(editorX)
+                .setY(editorY)
+                .setPlaceholder(Component.literal("{}"))
+                .build(this.font, EDITOR_WIDTH, EDITOR_HEIGHT, Component.literal("Components")));
         // init runs again on resize, so the text lives in a field rather than only in the widget
         this.editor.setValue(this.text);
         this.editor.setValueListener(edited -> {
@@ -85,7 +88,7 @@ public class NbtEditScreen extends Screen {
         }
 
         try {
-            CompoundTag tag = TagParser.parseTag(trimmed);
+            CompoundTag tag = TagParser.parseCompoundFully(trimmed);
             this.error = null;
             return tag.isEmpty() ? Optional.empty() : Optional.of(tag);
         } catch (CommandSyntaxException e) {

@@ -3,19 +3,19 @@ package com.coolerpromc.restrictedinventory.config.util;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.RegistryAccess;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.List;
 import java.util.Optional;
 
-public record GroupEntry(ResourceLocation group, Optional<DisplayEntry> display) implements Restriction {
+public record GroupEntry(Identifier group, Optional<DisplayEntry> display) implements Restriction {
     public static final Codec<GroupEntry> CODEC = RecordCodecBuilder.create(i -> i.group(
         RestrictionCodecs.GROUP_ID.fieldOf("group").forGetter(GroupEntry::group),
         RestrictionCodecs.strictOptionalField(DisplayEntry.CODEC, "display").forGetter(GroupEntry::display)
     ).apply(i, GroupEntry::new));
 
-    public GroupEntry(ResourceLocation group) {
+    public GroupEntry(Identifier group) {
         this(group, Optional.empty());
     }
 

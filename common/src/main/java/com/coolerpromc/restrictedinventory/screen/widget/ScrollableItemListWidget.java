@@ -5,12 +5,13 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.sounds.SoundManager;
-import net.minecraft.core.HolderSet;
+import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -21,11 +22,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ScrollableItemListWidget extends AbstractWidget {
-    private static final ResourceLocation SLOT_HIGHLIGHT_BACK_SPRITE = ResourceLocation.withDefaultNamespace("container/slot_highlight_back");
-    private static final ResourceLocation SLOT_HIGHLIGHT_FRONT_SPRITE = ResourceLocation.withDefaultNamespace("container/slot_highlight_front");
-    private static final ResourceLocation SCROLLER_BACKGROUND_SPRITE = ResourceLocation.withDefaultNamespace("widget/scroller_background");
-    private static final ResourceLocation SCROLLER_SPRITE = ResourceLocation.withDefaultNamespace("widget/scroller");
-    private static final ResourceLocation SLOT_SPRITE = ResourceLocation.withDefaultNamespace("container/slot");
+    private static final Identifier SLOT_HIGHLIGHT_BACK_SPRITE = Identifier.withDefaultNamespace("container/slot_highlight_back");
+    private static final Identifier SLOT_HIGHLIGHT_FRONT_SPRITE = Identifier.withDefaultNamespace("container/slot_highlight_front");
+    private static final Identifier SCROLLER_BACKGROUND_SPRITE = Identifier.withDefaultNamespace("widget/scroller_background");
+    private static final Identifier SCROLLER_SPRITE = Identifier.withDefaultNamespace("widget/scroller");
+    private static final Identifier SLOT_SPRITE = Identifier.withDefaultNamespace("container/slot");
     private static final int ITEM_SIZE = 14;
     private static final int ITEM_GAP = 0;
     private static final int ITEM_STEP = ITEM_SIZE + ITEM_GAP;
@@ -163,17 +164,17 @@ public class ScrollableItemListWidget extends AbstractWidget {
 
             boolean hovered = i == hoveredIndex;
 
-            graphics.blitSprite(SLOT_SPRITE, drawX, drawY, ITEM_SIZE, ITEM_SIZE);
+            graphics.blitSprite(RenderPipelines.GUI_TEXTURED, SLOT_SPRITE, drawX, drawY, ITEM_SIZE, ITEM_SIZE);
 
             if (hovered) {
-                graphics.fillGradient(RenderType.guiOverlay(), drawX + 1, drawY + 1, drawX + ITEM_SIZE, drawY + ITEM_SIZE, -2130706433, -2130706433, 0);
+                graphics.fillGradient(drawX + 1, drawY + 1, drawX + ITEM_SIZE, drawY + ITEM_SIZE, -2130706433, -2130706433);
             }
 
-            graphics.pose().pushPose();
-            graphics.pose().translate(drawX + 1, drawY + 1, 0);
-            graphics.pose().scale(0.75f, 0.75f, 0.75f);
+            graphics.pose().pushMatrix();
+            graphics.pose().translate(drawX + 1, drawY + 1);
+            graphics.pose().scale(0.75f, 0.75f);
             graphics.renderFakeItem(renderStack, 0, 0);
-            graphics.pose().popPose();
+            graphics.pose().popMatrix();
         }
 
         graphics.disableScissor();
@@ -181,12 +182,12 @@ public class ScrollableItemListWidget extends AbstractWidget {
         int scrollbarX = getX() + this.width - SCROLLBAR_WIDTH;
         int thumbHeight = getScrollbarThumbHeight();
         int thumbY = getScrollbarThumbY();
-        graphics.blitSprite(SCROLLER_BACKGROUND_SPRITE, scrollbarX, getListY(), SCROLLBAR_WIDTH, getListHeight());
-        graphics.blitSprite(SCROLLER_SPRITE, scrollbarX, thumbY, SCROLLBAR_WIDTH, thumbHeight);
+        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, SCROLLER_BACKGROUND_SPRITE, scrollbarX, getListY(), SCROLLBAR_WIDTH, getListHeight());
+        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, SCROLLER_SPRITE, scrollbarX, thumbY, SCROLLBAR_WIDTH, thumbHeight);
 
         if (hoveredIndex >= 0) {
             var font = Minecraft.getInstance().font;
-            graphics.renderComponentTooltip(font, buildTooltip(hoveredIndex), mouseX, mouseY);
+            graphics.setComponentTooltipForNextFrame(font, buildTooltip(hoveredIndex), mouseX, mouseY);
         }
     }
 
@@ -206,14 +207,18 @@ public class ScrollableItemListWidget extends AbstractWidget {
         if (mode == Mode.ITEMS) {
             return items.get(index);
         }
-        HolderSet<Item> members = BuiltInRegistries.ITEM.getOrCreateTag(tags.get(index));
-        if (members.size() == 0) return null;
+        List<Holder<Item>> members = new ArrayList<>();
+        BuiltInRegistries.ITEM.getTagOrEmpty(tags.get(index)).forEach(members::add);
+        if (members.isEmpty()) return null;
         int cycleIndex = (int) ((System.currentTimeMillis() / 1000) % members.size());
         return members.get(cycleIndex).value().getDefaultInstance();
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+
         if (!isMouseOver(mouseX, mouseY)) return false;
 
         if (mouseY < getListY()) {
@@ -245,28 +250,28 @@ public class ScrollableItemListWidget extends AbstractWidget {
             return true;
         }
 
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, doubleClick);
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+    public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
         if (isDraggingScrollbar) {
             int maxScroll = getMaxScroll();
             int thumbHeight = getScrollbarThumbHeight();
-            double relativeY = mouseY - getListY() - dragScrollbarOffsetY;
+            double relativeY = event.y() - getListY() - dragScrollbarOffsetY;
             this.scrollAmount = Math.max(0, Math.min((relativeY / (getListHeight() - thumbHeight)) * maxScroll, maxScroll));
             return true;
         }
-        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+        return super.mouseDragged(event, dragX, dragY);
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    public boolean mouseReleased(MouseButtonEvent event) {
         if (isDraggingScrollbar) {
             isDraggingScrollbar = false;
             return true;
         }
-        return super.mouseReleased(mouseX, mouseY, button);
+        return super.mouseReleased(event);
     }
 
     @Override

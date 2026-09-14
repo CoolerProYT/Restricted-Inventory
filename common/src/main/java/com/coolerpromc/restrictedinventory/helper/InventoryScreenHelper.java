@@ -5,6 +5,7 @@ import com.coolerpromc.restrictedinventory.config.util.Restriction;
 import com.coolerpromc.restrictedinventory.mixin.accessor.AbstractContainerScreenAccessor;
 import com.coolerpromc.restrictedinventory.mixin.accessor.ScreenAccessor;
 import com.coolerpromc.restrictedinventory.platform.Services;
+import com.coolerpromc.restrictedinventory.util.GhostItemOpacity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -14,7 +15,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ArmorSlot;
 import net.minecraft.world.inventory.Slot;
-import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
@@ -45,14 +45,7 @@ public class InventoryScreenHelper {
 
                 ItemStack stack = restrictedSlot.getValue().displayStack(player.registryAccess());
                 if (!stack.isEmpty()) {
-                    if (stack.getItem() instanceof BlockItem){
-                        GhostItemRenderer.render(graphics, stack, x, y, 0.3f);
-                    }
-                    else {
-                        graphics.setColor(1f, 1f, 1f, 0.3f);
-                        graphics.renderFakeItem(stack, x, y);
-                        graphics.setColor(1f, 1f, 1f, 1f);
-                    }
+                    GhostItemOpacity.render(0.3f, () -> graphics.renderFakeItem(stack, x, y));
                 }
             }
         }

@@ -10,7 +10,7 @@ import com.coolerpromc.restrictedinventory.config.util.TargetedRestrictions;
 import com.coolerpromc.restrictedinventory.network.ClientBoundCommonConfigSyncPacket;
 import com.coolerpromc.restrictedinventory.network.ClientBoundNotifyUpdatePacket;
 import com.coolerpromc.restrictedinventory.platform.Services;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.scores.PlayerTeam;
 
@@ -123,7 +123,7 @@ public class CommonConfig {
         return RESTRICTED_SLOTS.get().entrySet().stream().collect(Collectors.toMap(e -> Integer.parseInt(e.getKey()), Map.Entry::getValue));
     }
 
-    public static Map<ResourceLocation, RestrictionGroup> getGroups() {
+    public static Map<Identifier, RestrictionGroup> getGroups() {
         return RestrictionGroups.resolve(GROUPS.get());
     }
 

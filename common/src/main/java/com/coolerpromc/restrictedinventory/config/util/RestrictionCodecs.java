@@ -10,7 +10,7 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.MapLike;
 import com.mojang.serialization.RecordBuilder;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -20,7 +20,7 @@ public final class RestrictionCodecs {
 
     public static final Codec<String> ITEM_ID = Codec.STRING.validate(RestrictionCodecs::validateItemId);
 
-    public static final Codec<ResourceLocation> GROUP_ID = Codec.STRING.comapFlatMap(RestrictionCodecs::parseGroupId, ResourceLocation::toString);
+    public static final Codec<Identifier> GROUP_ID = Codec.STRING.comapFlatMap(RestrictionCodecs::parseGroupId, Identifier::toString);
 
     public static final Codec<String> SLOT_INDEX = Codec.STRING.validate(RestrictionCodecs::validateSlotIndex);
 
@@ -86,8 +86,8 @@ public final class RestrictionCodecs {
         };
     }
 
-    public static DataResult<ResourceLocation> parseGroupId(String value) {
-        ResourceLocation id = ResourceLocation.tryParse(qualify(value));
+    public static DataResult<Identifier> parseGroupId(String value) {
+        Identifier id = Identifier.tryParse(qualify(value));
         return id != null ? DataResult.success(id) : DataResult.error(() -> "Not a valid group id: " + value);
     }
 
@@ -97,14 +97,14 @@ public final class RestrictionCodecs {
 
     private static DataResult<String> validateItemOrTagId(String value) {
         String id = value.startsWith("#") ? value.substring(1) : value;
-        return ResourceLocation.tryParse(id) != null ? DataResult.success(value) : DataResult.error(() -> "Not a valid item or tag id: " + value);
+        return Identifier.tryParse(id) != null ? DataResult.success(value) : DataResult.error(() -> "Not a valid item or tag id: " + value);
     }
 
     private static DataResult<String> validateItemId(String value) {
         if (value.startsWith("#")) {
             return DataResult.error(() -> "A display must name a single item, not the tag: " + value);
         }
-        return ResourceLocation.tryParse(value) != null ? DataResult.success(value) : DataResult.error(() -> "Not a valid item id: " + value);
+        return Identifier.tryParse(value) != null ? DataResult.success(value) : DataResult.error(() -> "Not a valid item id: " + value);
     }
 
     private static DataResult<String> validateSlotIndex(String value) {

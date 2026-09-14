@@ -5,23 +5,23 @@ import com.mojang.datafixers.util.Either;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.core.Holder;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.component.DataComponentPatch;
-import net.minecraft.core.component.DataComponentPredicate;
+import net.minecraft.core.component.DataComponentExactPredicate;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.RegistryOps;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -43,7 +43,7 @@ public final class ItemEntry implements Restriction {
     private final Optional<CompoundTag> components;
     private final Optional<DisplayEntry> display;
 
-    private @Nullable DataComponentPredicate predicate;
+    private @Nullable DataComponentExactPredicate predicate;
     private @Nullable RegistryAccess predicateRegistries;
 
     public ItemEntry(String item, Optional<CompoundTag> components, Optional<DisplayEntry> display) {
@@ -81,28 +81,30 @@ public final class ItemEntry implements Restriction {
         return item.startsWith("#");
     }
 
-    public @Nullable ResourceLocation id() {
-        return ResourceLocation.tryParse(isTag() ? item.substring(1) : item);
+    public @Nullable Identifier id() {
+        return Identifier.tryParse(isTag() ? item.substring(1) : item);
     }
 
     public @Nullable TagKey<Item> tagKey() {
-        ResourceLocation id = id();
+        Identifier id = id();
         return isTag() && id != null ? TagKey.create(Registries.ITEM, id) : null;
     }
 
     public List<Item> items() {
-        ResourceLocation id = id();
+        Identifier id = id();
         if (id == null) return List.of();
 
         if (isTag()) {
-            return BuiltInRegistries.ITEM.getOrCreateTag(TagKey.create(Registries.ITEM, id)).stream().map(Holder::value).toList();
+            List<Item> members = new ArrayList<>();
+            BuiltInRegistries.ITEM.getTagOrEmpty(TagKey.create(Registries.ITEM, id)).forEach(holder -> members.add(holder.value()));
+            return members;
         }
-        return BuiltInRegistries.ITEM.getOptional(id).<List<Item>>map(List::of).orElseGet(List::of);
+        return BuiltInRegistries.ITEM.getOptional(id).map(List::of).orElseGet(List::of);
     }
 
     @Override
     public boolean matches(ItemStack stack, RegistryAccess registries) {
-        ResourceLocation id = id();
+        Identifier id = id();
         if (id == null) return false;
 
         boolean matchesItem = isTag() ? stack.is(TagKey.create(Registries.ITEM, id)) : BuiltInRegistries.ITEM.getOptional(id).map(stack::is).orElse(false);
@@ -110,7 +112,7 @@ public final class ItemEntry implements Restriction {
         if (!matchesItem) return false;
         if (components.isEmpty()) return true;
 
-        DataComponentPredicate expected = predicate(registries);
+        DataComponentExactPredicate expected = predicate(registries);
         return expected != null && expected.test(stack);
     }
 
@@ -122,10 +124,10 @@ public final class ItemEntry implements Restriction {
         return items().stream().map(value -> stackOf(value, registries)).toList();
     }
 
-    private @Nullable DataComponentPredicate predicate(RegistryAccess registries) {
+    private @Nullable DataComponentExactPredicate predicate(RegistryAccess registries) {
         if (predicate != null && predicateRegistries == registries) return predicate;
 
-        DataResult<DataComponentPredicate> result = DataComponentPredicate.CODEC.parse(ops(registries), components.orElseThrow());
+        DataResult<DataComponentExactPredicate> result = DataComponentExactPredicate.CODEC.parse(ops(registries), components.orElseThrow());
         result.error().ifPresent(error -> Constants.LOGGER.warn("Ignoring unreadable component filter on {}: {}", item, error.message()));
 
         this.predicate = result.result().orElse(null);

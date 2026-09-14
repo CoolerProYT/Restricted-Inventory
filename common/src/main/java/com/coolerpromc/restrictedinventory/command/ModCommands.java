@@ -6,6 +6,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.server.permissions.Permissions;
 
 public class ModCommands {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher){
@@ -14,6 +15,6 @@ public class ModCommands {
     }
 
     private static boolean canConfig(CommandSourceStack commandSourceStack) {
-        return CommonConfig.useClientRestriction() || commandSourceStack.hasPermission(4);
+        return CommonConfig.useClientRestriction() || commandSourceStack.permissions().hasPermission(Permissions.COMMANDS_OWNER);
     }
 }

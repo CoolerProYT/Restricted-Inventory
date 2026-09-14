@@ -1,7 +1,7 @@
 package com.coolerpromc.restrictedinventory.config.util;
 
 import com.coolerpromc.restrictedinventory.Constants;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import org.jetbrains.annotations.Nullable;
 import java.util.Collection;
@@ -10,31 +10,31 @@ import java.util.Map;
 import java.util.Optional;
 
 public final class RestrictionGroups {
-    private static volatile Map<ResourceLocation, RestrictionGroup> local = Map.of();
-    private static volatile @Nullable Map<ResourceLocation, RestrictionGroup> remote = null;
+    private static volatile Map<Identifier, RestrictionGroup> local = Map.of();
+    private static volatile @Nullable Map<Identifier, RestrictionGroup> remote = null;
 
     private RestrictionGroups() {
     }
 
-    public static void setLocal(Map<ResourceLocation, RestrictionGroup> groups) {
+    public static void setLocal(Map<Identifier, RestrictionGroup> groups) {
         local = Map.copyOf(groups);
     }
 
-    public static void setRemote(Map<ResourceLocation, RestrictionGroup> groups) {
+    public static void setRemote(Map<Identifier, RestrictionGroup> groups) {
         remote = Map.copyOf(groups);
     }
 
-    public static Map<ResourceLocation, RestrictionGroup> all() {
-        Map<ResourceLocation, RestrictionGroup> synced = remote;
+    public static Map<Identifier, RestrictionGroup> all() {
+        Map<Identifier, RestrictionGroup> synced = remote;
         return synced != null ? synced : local;
     }
 
-    public static Optional<RestrictionGroup> get(ResourceLocation id) {
+    public static Optional<RestrictionGroup> get(Identifier id) {
         return Optional.ofNullable(all().get(id));
     }
 
-    public static Map<ResourceLocation, RestrictionGroup> resolve(Map<String, RestrictionGroup> raw) {
-        Map<ResourceLocation, RestrictionGroup> groups = new LinkedHashMap<>();
+    public static Map<Identifier, RestrictionGroup> resolve(Map<String, RestrictionGroup> raw) {
+        Map<Identifier, RestrictionGroup> groups = new LinkedHashMap<>();
 
         raw.forEach((key, group) -> RestrictionCodecs.parseGroupId(key)
             .resultOrPartial(error -> Constants.LOGGER.warn("Ignoring restriction group '{}': {}", key, error))

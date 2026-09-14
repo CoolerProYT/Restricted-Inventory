@@ -10,17 +10,17 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public record ClientBoundCommonConfigSyncPacket(boolean useClientRestriction, Map<ResourceLocation, RestrictionGroup> groups) implements CustomPacketPayload {
+public record ClientBoundCommonConfigSyncPacket(boolean useClientRestriction, Map<Identifier, RestrictionGroup> groups) implements CustomPacketPayload {
     public static final Type<ClientBoundCommonConfigSyncPacket> TYPE = new Type<>(Constants.id("common_config_sync"));
     public static final StreamCodec<RegistryFriendlyByteBuf, ClientBoundCommonConfigSyncPacket> STREAM_CODEC = StreamCodec.composite(
             ByteBufCodecs.BOOL,
             ClientBoundCommonConfigSyncPacket::useClientRestriction,
-            ByteBufCodecs.map(HashMap::new, ResourceLocation.STREAM_CODEC, RestrictionGroup.STREAM_CODEC),
+            ByteBufCodecs.map(HashMap::new, Identifier.STREAM_CODEC, RestrictionGroup.STREAM_CODEC),
             ClientBoundCommonConfigSyncPacket::groups,
             ClientBoundCommonConfigSyncPacket::new
     );
