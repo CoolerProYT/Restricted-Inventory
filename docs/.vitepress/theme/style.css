@@ -1,0 +1,90 @@
+:root {
+  --vp-c-brand-1: #8a5a12;
+  --vp-c-brand-2: #a16c1c;
+  --vp-c-brand-3: #b98128;
+  --vp-c-brand-soft: rgba(185, 129, 40, 0.14);
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: linear-gradient(120deg, #5b5b5b 15%, #b98128);
+  --vp-home-hero-image-background-image: radial-gradient(circle, rgba(185, 129, 40, 0.32) 0%, rgba(185, 129, 40, 0) 70%);
+  --vp-home-hero-image-filter: blur(44px);
+
+  /* Minecraft container colors. */
+  --ri-slot-bg: #8b8b8b;
+  --ri-slot-dark: #373737;
+  --ri-slot-light: #ffffff;
+  --ri-panel-bg: #c6c6c6;
+  --ri-panel-light: #ffffff;
+  --ri-panel-dark: #555555;
+}
+
+.dark {
+  --vp-c-brand-1: #e3b25e;
+  --vp-c-brand-2: #d19d45;
+  --vp-c-brand-3: #b98128;
+  --vp-c-brand-soft: rgba(227, 178, 94, 0.16);
+  --vp-home-hero-name-background: linear-gradient(120deg, #d6d6d6 15%, #e3b25e);
+}
+
+/* Pixel art stays crisp at any size. */
+.VPHero .image-src,
+.pixelated {
+  image-rendering: pixelated;
+}
+
+.VPHero .image-src {
+  width: 300px;
+  height: 300px;
+  border-radius: 6px;
+}
+
+@media (max-width: 959px) {
+  .VPHero .image-src {
+    width: 200px;
+    height: 200px;
+  }
+}
+
+/* Slots sit inside table cells without stretching the row. */
+.vp-doc td .ri-item {
+  margin: 2px 0;
+}
+
+.ri-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 18px;
+  margin: 12px 0;
+}
+
+/* Extra section under the home page features. The home layout already pads it. */
+.ri-home-section {
+  margin-top: 48px;
+}
+
+.ri-home-section h2 {
+  margin-top: 0;
+  border-top: none;
+}
+
+/* The long product name wraps on small screens instead of overflowing. */
+.VPHero .name {
+  overflow-wrap: anywhere;
+}
+
+/* Smaller slots keep the full 9-wide inventory on a phone screen. */
+@media (max-width: 420px) {
+  .vp-doc .ri-inventory .ri-slot {
+    width: 30px;
+    height: 30px;
+  }
+
+  .vp-doc .ri-inventory .ri-icon {
+    width: 26px;
+    height: 26px;
+  }
+
+  .vp-doc .ri-inventory .ri-panel {
+    padding: 6px 6px 8px;
+  }
+}
