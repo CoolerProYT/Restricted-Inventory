@@ -40,9 +40,11 @@ jobs:
 
       - run: npm ci
 
-      # Builds for https://<user>.github.io/Restricted-Inventory/. When a custom (sub)domain is set up
-      # in the Pages settings, add `env: DOCS_BASE: /` here so the site is served from the root.
+      # Served from the root of a custom (sub)domain, so no /Restricted-Inventory/ prefix.
+      # Remove DOCS_BASE to go back to https://<user>.github.io/Restricted-Inventory/.
       - run: npm run build
+        env:
+          DOCS_BASE: /
 
       - uses: actions/upload-pages-artifact@v3
         with:
