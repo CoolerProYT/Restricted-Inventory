@@ -15,12 +15,12 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ResourceHandlerSlot.class)
-public abstract class ResourceHandlerSloMixin extends StackCopySlot {
+public abstract class ResourceHandlerSlotMixin extends StackCopySlot {
     @Shadow
     @Final
     private ResourceHandler<ItemResource> handler;
 
-    public ResourceHandlerSloMixin(int slot, int x, int y) {
+    public ResourceHandlerSlotMixin(int slot, int x, int y) {
         super(slot, x, y);
     }
 
