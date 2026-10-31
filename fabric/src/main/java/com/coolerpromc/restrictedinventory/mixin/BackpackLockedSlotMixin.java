@@ -16,7 +16,9 @@ public abstract class BackpackLockedSlotMixin extends Slot {
         super(container, slot, x, y);
     }
 
-    @ModifyReturnValue(method = "mayPlace", at = @At("RETURN"), require = 0)
+    // Inmis is an optional, unmapped target. Its Slot override uses the Mojang
+    // name in development and the Fabric intermediary name in production.
+    @ModifyReturnValue(method = {"mayPlace", "method_7680"}, at = @At("RETURN"), require = 1)
     public boolean mayPlace(boolean original, @Local(argsOnly = true) ItemStack stack){
         if (original){
             return super.mayPlace(stack);
