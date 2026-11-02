@@ -1,2 +1,2 @@
-## 20.1.11
-- Fixed Inmis backpack inventories allowing items into locked or restricted player inventory slots on Minecraft 1.20.1.
+## 20.1.12
+- Fixed restricted inventory slot icons disappearing after respawning on Forge.

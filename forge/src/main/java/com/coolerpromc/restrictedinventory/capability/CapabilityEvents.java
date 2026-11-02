@@ -1,6 +1,8 @@
 package com.coolerpromc.restrictedinventory.capability;
 
 import com.coolerpromc.restrictedinventory.Constants;
+import com.coolerpromc.restrictedinventory.config.CommonConfig;
+import com.coolerpromc.restrictedinventory.platform.Services;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
@@ -38,5 +40,13 @@ public class CapabilityEvents {
             });
         });
         event.getOriginal().invalidateCaps();
+    }
+
+    @SubscribeEvent
+    public static void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
+        Player player = event.getEntity();
+        // Clone preserves server data, but the replacement client player needs a fresh sync.
+        Services.PLATFORM.setRestrictedSlots(player, Services.PLATFORM.getRestrictedSlots(player));
+        Services.PLATFORM.setTargetedRestrictions(player, CommonConfig.resolveTargetedRestrictions(player));
     }
 }
