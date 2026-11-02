@@ -1,9 +1,11 @@
 package com.coolerpromc.restrictedinventory;
 
 import com.coolerpromc.restrictedinventory.command.ModCommands;
+import com.coolerpromc.restrictedinventory.config.CommonConfig;
 import com.coolerpromc.restrictedinventory.config.util.Restriction;
 import com.coolerpromc.restrictedinventory.config.util.TargetedRestrictions;
 import com.coolerpromc.restrictedinventory.network.*;
+import com.coolerpromc.restrictedinventory.platform.Services;
 import com.coolerpromc.restrictedinventory.platform.util.NeoForgePayloadContext;
 import com.mojang.serialization.Codec;
 import net.neoforged.bus.api.IEventBus;
@@ -12,6 +14,7 @@ import net.neoforged.neoforge.attachment.AttachmentType;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.OnDatapackSyncEvent;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
@@ -40,6 +43,7 @@ public class NeoForgeRestrictedInventory {
         NeoForge.EVENT_BUS.addListener(this::onDatapackSync);
         NeoForge.EVENT_BUS.addListener(this::onRegisterCommands);
         NeoForge.EVENT_BUS.addListener(this::onServerTick);
+        NeoForge.EVENT_BUS.addListener(this::onPlayerRespawn);
         eventBus.addListener(this::onRegisterPayloadHandlers);
     }
 
@@ -49,6 +53,13 @@ public class NeoForgeRestrictedInventory {
 
     public void onServerTick(ServerTickEvent.Post event) {
         RestrictedInventory.refreshTargetedRestrictions(event.getServer());
+    }
+
+    public void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
+        var player = event.getEntity();
+        // Attachment copying preserves server data; the replacement client player needs a fresh sync.
+        Services.PLATFORM.setRestrictedSlots(player, Services.PLATFORM.getRestrictedSlots(player));
+        Services.PLATFORM.setTargetedRestrictions(player, CommonConfig.resolveTargetedRestrictions(player));
     }
 
     public void onRegisterPayloadHandlers(RegisterPayloadHandlersEvent event) {
